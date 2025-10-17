@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 from web3 import Web3
 from hexbytes import HexBytes
 
-RPC_URL = os.getenv("RPC_URL", "http://localhost:8545")
+RPC_URL = os.getenv("RPC_URL", "https://sepolia.infura.io/v3/726930ebd0e248ff94a8da1ce85ee33a")
 w3 = Web3(Web3.HTTPProvider(RPC_URL))
 
 DAO_ENV = os.getenv("DAO_ADDRESS", "0x0000000000000000000000000000000000000000")
@@ -24,7 +24,8 @@ def governor_contract(dao: str = None):
 def encode_propose_ai(title: str, description: str, fund_wei: int, target: str, dao: str = None) -> str:
     c = governor_contract(dao)
     target = checksum(target)
-    return c.encodeABI(fn_name="proposeAI", args=[(title, description, int(fund_wei)), target])
+    # 使用正确的方法编码函数调用
+    return c.functions.proposeAI((title, description, int(fund_wei)), target).build_transaction({'from': '0x0000000000000000000000000000000000000001'})['data']
 
 def estimate_gas(from_addr: str, to_addr: str, data: str, value: int = 0) -> int:
     tx = {
