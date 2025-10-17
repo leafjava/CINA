@@ -17,6 +17,7 @@ export default function ProposalDraftPanel() {
   const [status, setStatus] = useState<string>('');
   const { writeContractAsync } = useWriteContract();
 
+  // 点击模拟按钮
   const simulate = async () => {
     if (!draft) return;
     setStatus('模拟中...');
