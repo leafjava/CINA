@@ -14,10 +14,10 @@ export type Meta = {
 
 export const META: Meta = {
   chainId: 421614, // Arbitrum Sepolia
-  diamond: '0xYourDiamondAddress' as `0x${string}`, // 需要替换为实际的Diamond合约地址
+  diamond: '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // 需要替换为实际的Diamond合约地址
   tokens: { 
-    STETH: '0xYourStETHAddress' as `0x${string}`, // 需要替换为实际的stETH地址
-    FXUSD: '0xYourFxUSDAddress' as `0x${string}`, // 需要替换为实际的FXUSD地址
+    STETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // 需要替换为实际的stETH地址
+    FXUSD: '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // 需要替换为实际的FXUSD地址
     USDC: '0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8' as `0x${string}` // Arbitrum Sepolia USDC地址
   }
 };
