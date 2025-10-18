@@ -202,33 +202,23 @@ export async function getPositions(owner: `0x${string}`): Promise<Position[]> {
      // 详细诊断网络连接
      await diagnoseNetworkConnection();
     
-    // 首先验证合约地址
-    // const verification = await verifyContract();
-    // if (!verification.isValid) {
-    //   throw new Error(verification.message);
-    // }
-    
-    
-    // 注意：CINA项目中没有直接的getPositions函数
-    // 这里返回空数组作为临时解决方案
-    // 实际实现需要：
-    // 1. 查询用户拥有的NFT token IDs
-    // 2. 对每个token ID调用getPosition函数
-    // 3. 或者通过事件查询历史开仓记录
-    
-    console.log('注意：CINA项目中没有直接的getPositions函数，返回空数组');
-    // console.log('合约验证结果:', verification.message);
-    return [];
-
-     // const positions = await publicClient.readContract({
-     //   address: META.diamond,
-     //   abi: POSITION_FACET_ABI,
-     //   functionName: 'getPositions',
-     //   args: [owner]
-     // }) as Position[];
-
-     // return positions;
-
+     console.log(`getPositions address:${META.diamond} args:${owner}`)
+     console.log('abi',POSITION_FACET_ABI)
+     const positions = await publicClient.readContract({
+       address: META.diamond,
+       abi: POSITION_FACET_ABI,
+       functionName: 'getPositions',
+       args: [owner]
+     }) as [bigint, `0x${string}`, bigint, bigint, bigint][];
+ 
+     // 将数组格式转换为对象格式
+     return positions.map(([id, collateralToken, collateralAmount, debtAmount, healthFactor]) => ({
+       id,
+       collateralToken,
+       collateralAmount,
+       debtAmount,
+       healthFactor
+     }));
     
   } catch (error) {
     console.error('获取仓位失败:', error);
