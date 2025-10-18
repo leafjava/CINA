@@ -116,7 +116,7 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
 
   return (
     <div className="p-6 border rounded-lg bg-white shadow-sm">
-      <h3 className="text-lg font-semibold mb-4">开仓交易</h3>
+      <h3 className="text-lg font-semibold mb-4 text-black">开仓交易</h3>
       
       <div className="space-y-4">
         <div>
