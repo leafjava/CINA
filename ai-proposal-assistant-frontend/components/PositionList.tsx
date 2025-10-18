@@ -31,6 +31,7 @@ export default function PositionList() {
 
   useEffect(() => {
     if (isConnected && address) {
+      console.log(`PositionList isConnected:${isConnected}  address:${address}`)
       loadPositions();
     }
   }, [isConnected, address]);

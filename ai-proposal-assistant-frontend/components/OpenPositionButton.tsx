@@ -13,8 +13,8 @@ import {
   type OpenPositionParams,
   type Position
 } from '@/lib/position';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 interface OpenPositionButtonProps {
   onSuccess?: (positions: Position[]) => void;

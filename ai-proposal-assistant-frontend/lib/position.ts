@@ -97,8 +97,8 @@ export async function ensureApprove(
 // Position Facet ABI
 export const POSITION_FACET_ABI = parseAbi([
   'function openPositionFlashLoan(address collateralToken, uint256 collateralAmount, uint256 targetLeverageBps, uint256 minMintFxUSD, bytes dexSwapData, uint256 deadline)',
-  'function getPositions(address owner) view returns (tuple(uint256 id, address collateralToken, uint256 collateralAmount, uint256 debtAmount, uint256 healthFactor)[])',
-  'function getPosition(uint256 positionId) view returns (tuple(uint256 id, address collateralToken, uint256 collateralAmount, uint256 debtAmount, uint256 healthFactor))'
+  'function getPositions(address owner) view returns ((uint256,address,uint256,uint256,uint256)[])',
+  'function getPosition(uint256 positionId) view returns (uint256,address,uint256,uint256,uint256)'
 ]);
 
 // 4. openPositionFlashLoan - 开仓交易
@@ -162,14 +162,23 @@ export type Position = {
 
 export async function getPositions(owner: `0x${string}`): Promise<Position[]> {
   try {
+    console.log(`getPositions address:${META.diamond} args:${owner}`)
+    console.log('abi',POSITION_FACET_ABI)
     const positions = await publicClient.readContract({
       address: META.diamond,
       abi: POSITION_FACET_ABI,
       functionName: 'getPositions',
       args: [owner]
-    }) as Position[];
+    }) as [bigint, `0x${string}`, bigint, bigint, bigint][];
 
-    return positions;
+    // 将数组格式转换为对象格式
+    return positions.map(([id, collateralToken, collateralAmount, debtAmount, healthFactor]) => ({
+      id,
+      collateralToken,
+      collateralAmount,
+      debtAmount,
+      healthFactor
+    }));
   } catch (error) {
     console.error('获取仓位失败:', error);
     throw error;
