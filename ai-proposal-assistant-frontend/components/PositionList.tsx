@@ -20,8 +20,26 @@ export default function PositionList() {
     try {
       const userPositions = await getPositions(address);
       setPositions(userPositions);
+      
+      // 如果没有仓位，显示友好提示
+      if (userPositions.length === 0) {
+        console.log('用户暂无仓位');
+      }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '获取仓位失败';
+      let errorMessage = '获取仓位失败';
+      
+      if (err instanceof Error) {
+        if (err.message.includes('合约地址') && err.message.includes('无效')) {
+          errorMessage = '合约地址配置错误，请联系管理员';
+        } else if (err.message.includes('getPositions')) {
+          errorMessage = '当前合约不支持仓位查询功能，这是演示版本';
+        } else if (err.message.includes('returned no data')) {
+          errorMessage = '合约函数调用失败，请检查网络连接和合约状态';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
       setError(errorMessage);
       console.error('获取仓位失败:', err);
     } finally {
@@ -58,8 +76,27 @@ export default function PositionList() {
       </div>
 
       {error && (
-        <div className="p-3 mb-4 bg-red-50 text-red-700 border border-red-200 rounded-md">
-          {error}
+        <div className="p-4 mb-4 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-md">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">提示</h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>{error}</p>
+                {error.includes('演示版本') && (
+                  <div className="mt-2">
+                    <p className="text-xs text-yellow-600">
+                      这是演示版本，仓位查询功能正在开发中。您可以尝试开仓功能来体验系统。
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -68,8 +105,16 @@ export default function PositionList() {
           加载仓位信息中...
         </div>
       ) : positions.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          暂无仓位
+        <div className="text-center py-8">
+          <div className="mx-auto h-12 w-12 text-gray-400">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">暂无仓位</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            您还没有开立任何仓位。点击"开仓"按钮开始您的交易之旅。
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
