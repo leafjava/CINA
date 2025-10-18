@@ -1,5 +1,5 @@
 import { createPublicClient, createWalletClient, custom, parseAbi, encodeFunctionData } from 'viem';
-import { arbitrumSepolia, sepolia } from 'viem/chains';
+import { arbitrumSepolia } from 'viem/chains';
 
 // 1. 基础配置 - getMeta
 export type Meta = {
@@ -7,7 +7,8 @@ export type Meta = {
   diamond: `0x${string}`;
   tokens: { 
     STETH: `0x${string}`; 
-    FXUSD: `0x${string}`; 
+    FXUSD: `0x${string}`;
+    USDC: `0x${string}`;  // 添加USDC支持
   };
 };
 
@@ -16,7 +17,8 @@ export const META: Meta = {
   diamond: '0xYourDiamondAddress' as `0x${string}`, // 需要替换为实际的Diamond合约地址
   tokens: { 
     STETH: '0xYourStETHAddress' as `0x${string}`, // 需要替换为实际的stETH地址
-    FXUSD: '0xYourFxUSDAddress' as `0x${string}`  // 需要替换为实际的FXUSD地址
+    FXUSD: '0xYourFxUSDAddress' as `0x${string}`, // 需要替换为实际的FXUSD地址
+    USDC: '0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8' as `0x${string}` // Arbitrum Sepolia USDC地址
   }
 };
 

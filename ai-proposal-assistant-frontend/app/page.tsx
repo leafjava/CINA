@@ -23,10 +23,10 @@ export default function HomePage() {
       </div>
 
       {/* 原有内容 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[70vh]">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[70vh]">
         <ChatPanel />
         <ProposalDraftPanel />
-      </div>
+      </div> */}
     </div>
   );
 }
