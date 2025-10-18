@@ -9,6 +9,12 @@ export default function HomePage() {
       {/* 导航区域 */}
       <div className="flex justify-center space-x-4">
         <Link 
+          href="/trading" 
+          className="px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 transition-colors font-medium"
+        >
+          合约交易
+        </Link>
+        <Link 
           href="/positions" 
           className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         >

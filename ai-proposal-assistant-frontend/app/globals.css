@@ -9,3 +9,22 @@
 }
 body { background: var(--bg); color: white; }
 .card { background: var(--card); border: 1px solid #20242c; border-radius: 1rem; }
+
+/* 自定义滚动条样式 */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #0B0E11;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #2B3139;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #3B4149;
+}
