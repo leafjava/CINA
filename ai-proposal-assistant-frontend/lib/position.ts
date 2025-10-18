@@ -1,5 +1,5 @@
 import { createPublicClient, createWalletClient, custom, parseAbi, encodeFunctionData } from 'viem';
-import { arbitrumSepolia } from 'viem/chains';
+import { sepolia } from 'viem/chains';
 
 // 1. 基础配置 - getMeta
 export type Meta = {
@@ -12,14 +12,24 @@ export type Meta = {
   };
 };
 
+// export const META: Meta = {
+//   chainId: 421614, // Arbitrum Sepolia
+//   diamond: '0xB8B3e6C7D0f0A9754F383107A6CCEDD8F19343Ec' as `0x${string}`, // 使用CINA部署的Diamond合约地址
+//   // diamond: '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // 使用CINA部署的Diamond合约地址
+//   tokens: { 
+//     STETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Arbitrum Sepolia stETH地址
+//     FXUSD: '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // CINA部署的FxUSD地址
+//     USDC: '0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8' as `0x${string}` // Arbitrum Sepolia USDC地址
+//   }
+// };
+
 export const META: Meta = {
-  chainId: 421614, // Arbitrum Sepolia
-  diamond: '0xB8B3e6C7D0f0A9754F383107A6CCEDD8F19343Ec' as `0x${string}`, // 使用CINA部署的Diamond合约地址
-  // diamond: '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // 使用CINA部署的Diamond合约地址
+  chainId: 11155111, // Sepolia测试网
+  diamond: '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
   tokens: { 
     STETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Arbitrum Sepolia stETH地址
-    FXUSD: '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // CINA部署的FxUSD地址
-    USDC: '0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8' as `0x${string}` // Arbitrum Sepolia USDC地址
+    FXUSD: '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
+    USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}` // Sepolia测试网USDC地址
   }
 };
 
@@ -29,12 +39,12 @@ export function getMeta(): Meta {
 
 // 创建客户端
 export const publicClient = createPublicClient({ 
-  chain: arbitrumSepolia, 
+  chain: sepolia, 
   transport: custom(typeof window !== 'undefined' ? window.ethereum! : undefined) 
 });
 
 export const walletClient = createWalletClient({ 
-  chain: arbitrumSepolia, 
+  chain: sepolia, 
   transport: custom(typeof window !== 'undefined' ? window.ethereum! : undefined) 
 });
 
@@ -187,13 +197,17 @@ export type Position = {
 // 实际实现需要遍历所有可能的position ID或使用事件查询
 export async function getPositions(owner: `0x${string}`): Promise<Position[]> {
   try {
-    console.log(`getPositions address:${META.diamond} args:${owner}`)
+     console.log(`getPositions address:${META.diamond} args:${owner}`)
+     
+     // 详细诊断网络连接
+     await diagnoseNetworkConnection();
     
     // 首先验证合约地址
-    const verification = await verifyContract();
-    if (!verification.isValid) {
-      throw new Error(verification.message);
-    }
+    // const verification = await verifyContract();
+    // if (!verification.isValid) {
+    //   throw new Error(verification.message);
+    // }
+    
     
     // 注意：CINA项目中没有直接的getPositions函数
     // 这里返回空数组作为临时解决方案
@@ -203,17 +217,17 @@ export async function getPositions(owner: `0x${string}`): Promise<Position[]> {
     // 3. 或者通过事件查询历史开仓记录
     
     console.log('注意：CINA项目中没有直接的getPositions函数，返回空数组');
-    console.log('合约验证结果:', verification.message);
+    // console.log('合约验证结果:', verification.message);
     return [];
 
-    // const positions = await publicClient.readContract({
-    //   address: META.diamond,
-    //   abi: POSITION_FACET_ABI,
-    //   functionName: 'getPositions',
-    //   args: [owner]
-    // }) as Position[];
+     // const positions = await publicClient.readContract({
+     //   address: META.diamond,
+     //   abi: POSITION_FACET_ABI,
+     //   functionName: 'getPositions',
+     //   args: [owner]
+     // }) as Position[];
 
-    return positions;
+     // return positions;
 
     
   } catch (error) {
@@ -301,6 +315,41 @@ export async function verifyContract(): Promise<{ isValid: boolean; message: str
       isValid: false,
       message: `验证合约时发生错误: ${error instanceof Error ? error.message : '未知错误'}`
     };
+  }
+}
+
+// 新增：网络连接诊断
+export async function diagnoseNetworkConnection(): Promise<void> {
+  try {
+    console.log('=== 开始网络诊断 ===');
+    
+    // 1. 检查当前链ID
+    const chainId = await publicClient.getChainId();
+    console.log('当前链ID:', chainId);
+    console.log('配置链ID:', META.chainId);
+    console.log('链ID匹配:', chainId === META.chainId);
+    
+    // 2. 检查最新区块
+    const blockNumber = await publicClient.getBlockNumber();
+    console.log('最新区块号:', blockNumber.toString());
+    
+    // 3. 检查合约代码
+    const code = await publicClient.getBytecode({ address: META.diamond });
+    console.log('合约代码长度:', code ? code.length : 0);
+    console.log('合约代码存在:', code && code !== '0x');
+    
+    // 4. 尝试不同的RPC端点
+    console.log('当前RPC配置:', sepolia.rpcUrls.default.http[0]);
+    
+    // 5. 检查地址格式
+    console.log('合约地址格式:', META.diamond);
+    console.log('地址长度:', META.diamond.length);
+    console.log('地址格式正确:', META.diamond.startsWith('0x') && META.diamond.length === 42);
+    
+    console.log('=== 网络诊断完成 ===');
+    
+  } catch (error) {
+    console.error('网络诊断失败:', error);
   }
 }
 
