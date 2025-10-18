@@ -1,21 +1,21 @@
 import './globals.css';
 import Providers from '../components/Providers';
-import ConnectWallet from '../components/ConnectWallet';
 
-export const metadata = { title: 'AI Proposal Assistant', description: 'Next.js MVP for DAO proposal via AI' };
+export const metadata = { 
+  title: 'AI Proposal Assistant', 
+  description: 'Next.js MVP for DAO proposal via AI',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+      </head>
       <body>
         <Providers>
-          <div className="max-w-6xl mx-auto p-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-xl font-semibold">AI Proposal Assistant</div>
-              <ConnectWallet />
-            </div>
-            {children}
-          </div>
+          {children}
         </Providers>
       </body>
     </html>

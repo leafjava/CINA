@@ -6,7 +6,7 @@ import { injected, metaMask, walletConnect } from 'wagmi/connectors';
 const chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 11155111);
 const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.sepolia.org';
 
-const chains = [sepolia, mainnet];
+const chains = [sepolia, mainnet] as const;
 export const wagmiConfig = createConfig({
   chains,
   connectors: [
