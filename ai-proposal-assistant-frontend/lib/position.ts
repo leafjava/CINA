@@ -14,8 +14,8 @@ export type Meta = {
 
 export const META: Meta = {
   chainId: 421614, // Arbitrum Sepolia
-  // diamond: '0xB8B3e6C7D0f0A9754F383107A6CCEDD8F19343Ec' as `0x${string}`, // 使用CINA部署的Diamond合约地址
-  diamond: '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // 使用CINA部署的Diamond合约地址
+  diamond: '0xB8B3e6C7D0f0A9754F383107A6CCEDD8F19343Ec' as `0x${string}`, // 使用CINA部署的Diamond合约地址
+  // diamond: '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // 使用CINA部署的Diamond合约地址
   tokens: { 
     STETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Arbitrum Sepolia stETH地址
     FXUSD: '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // CINA部署的FxUSD地址
@@ -205,6 +205,16 @@ export async function getPositions(owner: `0x${string}`): Promise<Position[]> {
     console.log('注意：CINA项目中没有直接的getPositions函数，返回空数组');
     console.log('合约验证结果:', verification.message);
     return [];
+
+    // const positions = await publicClient.readContract({
+    //   address: META.diamond,
+    //   abi: POSITION_FACET_ABI,
+    //   functionName: 'getPositions',
+    //   args: [owner]
+    // }) as Position[];
+
+    return positions;
+
     
   } catch (error) {
     console.error('获取仓位失败:', error);
