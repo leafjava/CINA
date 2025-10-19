@@ -26,8 +26,8 @@ export type Meta = {
 export const META: Meta = {
   chainId: 11155111, // Sepolia测试网
   diamond: '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
-  tokens: { 
-    STETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Arbitrum Sepolia stETH地址
+  tokens: {
+    STETH: '0x7Ed4791B6EE14c41154A0E71896d55355b71C10F' as `0x${string}`, // Mock stETH (Sepolia测试网)
     FXUSD: '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
     USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}` // Sepolia测试网USDC地址
   }

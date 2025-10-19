@@ -22,8 +22,12 @@ dist/
 # IDE
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
+
+# Documentation (if needed, can be uncommented)
+docs/
 
 # OS
 .DS_Store
