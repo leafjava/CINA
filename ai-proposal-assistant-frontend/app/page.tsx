@@ -3,6 +3,8 @@ import Link from 'next/link';
 import ConnectWallet from '../components/ConnectWallet';
 import Poster from '../components/ui/poster/poster';
 import Spline from '@splinetool/react-spline/next';
+// import PartnersSection from '../components/PartnersSection';
+import LogoMarquee from '../components/logoMarquee';
 
 export default function HomePage() {
   return (
@@ -171,7 +173,14 @@ export default function HomePage() {
             <div className="text-gray-300">交易手续费</div>
           </div>
         </div>
+        
+
       </div>
+
+      <div className='logoMarquee' style={{position: 'absolute',bottom: '60px',left: '53%',transform: 'translate(-50%)'}}>
+        <LogoMarquee />
+      </div>
+
     </div>
   );
 }

@@ -3,7 +3,7 @@ import Providers from '../components/Providers';
 import { gsap } from "gsap";
 
 export const metadata = { 
-  title: 'AI Proposal Assistant', 
+  title: 'CINA交易所', 
   description: 'Next.js MVP for DAO proposal via AI',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
 };
