@@ -1,4 +1,4 @@
-import { createPublicClient, createWalletClient, custom, parseAbi, encodeFunctionData } from 'viem';
+import { createPublicClient, createWalletClient, custom, parseAbi, encodeFunctionData, encodeAbiParameters } from 'viem';
 import { sepolia } from 'viem/chains';
 
 // 1. 基础配置 - getMeta
@@ -8,7 +8,10 @@ export type Meta = {
   tokens: { 
     STETH: `0x${string}`; 
     FXUSD: `0x${string}`;
-    USDC: `0x${string}`;  // 添加USDC支持
+    USDC: `0x${string}`;
+    WBTC: `0x${string}`;  // 添加WBTC支持
+    WRMB: `0x${string}`;  // 添加WRMB支持
+    USDT: `0x${string}`;  // 添加USDT支持
   };
 };
 
@@ -29,14 +32,10 @@ export const META: Meta = {
   tokens: { 
     STETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Sepolia stETH地址
     FXUSD: '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
-    USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}` // Sepolia测试网USDC地址
-    // WBTC开仓
-
-    // 总体流程修改：
-    // WRMB客户初始资金 0x7257122CAC1E7D58CB3768Acb7A0aBA66a0c162D
-    //Sepolia测试网 WBTC地址  0x29f2D40B0605204364af54EC677bD022dA425d03
-    //Sepolia测试网 wUSD
-    //Sepolia测试网 USDC(或USDT)地址  0x29f2D40B0605204364af54EC677bD022dA425d03
+    USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}`, // Sepolia测试网USDC地址
+    WBTC: '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}`, // Sepolia测试网WBTC地址
+    WRMB: '0x795751385c9ab8f832fda7f69a83e3804ee1d7f3' as `0x${string}`, // WRMB客户初始资金地址
+    USDT: '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}` // Sepolia测试网USDT地址（与WBTC相同地址，需要确认）
   }
 };
 
@@ -137,11 +136,22 @@ export const POOL_ABI = parseAbi([
 // 4. openPositionFlashLoan - 开仓交易
 export type OpenPositionParams = {
   user: `0x${string}`;
-  collateralToken: `0x${string}`;     // STETH
+  collateralToken: `0x${string}`;     // STETH 或 WBTC
   collateralAmount: bigint;           // 以最小单位
   targetLeverageBps: number;          // 3.0x -> 30000
   minMintFxUSD: bigint;               // 含滑点
   dexSwapData?: `0x${string}`;        // 没路由就 '0x'
+};
+
+// 新增：一步到位杠杆开仓参数
+export type LeverageOpenPositionParams = {
+  user: `0x${string}`;
+  wrmbAmount: bigint;                 // WRMB数量
+  wbtcAmount: bigint;                 // 目标WBTC数量
+  leverageMultiplier: number;        // 杠杆倍数
+  minFxUSDMint: bigint;               // 最小铸造FXUSD数量
+  minWbtcOut: bigint;                 // 最小WBTC输出
+  swapData?: `0x${string}`;           // DEX交换数据
 };
 
 export async function openPositionFlashLoan(params: OpenPositionParams): Promise<`0x${string}`> {
@@ -178,6 +188,72 @@ export async function openPositionFlashLoan(params: OpenPositionParams): Promise
     return hash;
   } catch (error) {
     console.error('开仓交易失败:', error);
+    throw error;
+  }
+}
+
+// 新增：一步到位杠杆开仓函数
+export async function openLeveragePosition(params: LeverageOpenPositionParams): Promise<`0x${string}`> {
+  try {
+    console.log('开始一步到位杠杆开仓流程...');
+    
+    // 1. 检查WRMB余额
+    const wrmbBalance = await getTokenBalance(META.tokens.WRMB, params.user);
+    if (wrmbBalance < params.wrmbAmount) {
+      throw new Error(`WRMB余额不足，当前余额: ${wrmbBalance.toString()}`);
+    }
+
+    // 2. 授权WRMB给Diamond合约
+    await ensureApprove(
+      META.tokens.WRMB,
+      params.user,
+      META.diamond,
+      params.wrmbAmount
+    );
+
+    // 3. 构造闪电贷开仓参数
+    // 流程：WRMB买WBTC -> 闪电贷借WBTC -> 存入金库抵押 -> 铸FXUSD -> 卖FXUSD买WBTC -> 还闪电贷
+    const flashLoanAmount = params.wbtcAmount * BigInt(Math.floor(params.leverageMultiplier * 10000)) / 10000n;
+    
+    const data = encodeFunctionData({
+      abi: POSITION_FACET_ABI,
+      functionName: 'openOrAddPositionFlashLoanV2',
+      args: [
+        {
+          tokenIn: META.tokens.WRMB,        // 输入代币：WRMB
+          amountIn: params.wrmbAmount,       // WRMB数量
+          tokenOut: META.tokens.WBTC,        // 输出代币：WBTC
+          minAmountOut: params.minWbtcOut,   // 最小WBTC输出
+          swapTarget: '0x0000000000000000000000000000000000000000', // DEX路由地址
+          swapData: params.swapData ?? '0x'  // 交换数据
+        },
+        '0x0000000000000000000000000000000000000000', // pool address - WBTC池地址
+        0, // positionId - 新开仓为0
+        flashLoanAmount, // 闪电贷借入的WBTC数量
+        encodeAbiParameters([
+          { type: 'bytes32' },
+          { type: 'uint256' },
+          { type: 'address' },
+          { type: 'bytes' }
+        ], [
+          '0x0000000000000000000000000000000000000000000000000000000000000000', // miscData
+          params.minFxUSDMint, // 最小铸造FXUSD数量
+          '0x0000000000000000000000000000000000000000', // swapTarget
+          '0x' // swapData
+        ])
+      ]
+    });
+
+    const hash = await walletClient.sendTransaction({
+      to: META.diamond,
+      data,
+      value: 0n
+    });
+
+    console.log('一步到位杠杆开仓交易已发送:', hash);
+    return hash;
+  } catch (error) {
+    console.error('一步到位杠杆开仓失败:', error);
     throw error;
   }
 }
