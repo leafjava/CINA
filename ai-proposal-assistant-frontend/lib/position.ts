@@ -1,28 +1,5 @@
-import { createPublicClient, createWalletClient, custom, parseAbi, encodeFunctionData, encodeAbiParameters, http, defineChain } from 'viem';
+import { createPublicClient, createWalletClient, custom, parseAbi, encodeFunctionData, encodeAbiParameters, http } from 'viem';
 import { sepolia } from 'viem/chains';
-
-// 本地开发链配置
-const localhost = defineChain({
-  id: 1337,
-  name: 'Localhost',
-  network: 'localhost',
-  nativeCurrency: {
-    decimals: 18,
-    name: 'Ether',
-    symbol: 'ETH',
-  },
-  rpcUrls: {
-    default: {
-      http: ['http://127.0.0.1:8545'],
-    },
-    public: {
-      http: ['http://127.0.0.1:8545'],
-    },
-  },
-  blockExplorers: {
-    default: { name: 'Local', url: 'http://localhost:8545' },
-  },
-});
 
 // 1. 基础配置 - getMeta
 export type Meta = {
@@ -38,92 +15,47 @@ export type Meta = {
   };
 };
 
-// export const META: Meta = {
-//   chainId: 421614, // Arbitrum Sepolia
-//   diamond: '0xB8B3e6C7D0f0A9754F383107A6CCEDD8F19343Ec' as `0x${string}`, // 使用CINA部署的Diamond合约地址
-//   // diamond: '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // 使用CINA部署的Diamond合约地址
-//   tokens: { 
-//     STETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Arbitrum Sepolia stETH地址
-//     FXUSD: '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // CINA部署的FxUSD地址
-//     USDC: '0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8' as `0x${string}` // Arbitrum Sepolia USDC地址
-//   }
-// };
-
-// 本地开发配置 - 强制检测本地环境
-const isLocalDev = (
-  process.env.NODE_ENV === 'development' && (
-    process.env.NEXT_PUBLIC_USE_LOCAL === 'true' || 
-    (typeof window !== 'undefined' && window.location.hostname === 'localhost') ||
-    (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1')
-  )
-) || (typeof window !== 'undefined' && window.location.hostname === 'localhost');
-
-console.log('isLocalDev',isLocalDev)
-
+// 强制使用 Sepolia 测试网配置
 export const META: Meta = {
-  chainId: isLocalDev ? 1337 : 11155111, // 本地开发使用1337，否则使用Sepolia测试网
-  diamond: isLocalDev 
-    ? '0x09635F643e140090A9A8Dcd712eD6285858ceBef' as `0x${string}` // 本地部署的Diamond合约地址
-    : '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
+  chainId: 11155111, // Sepolia测试网
+  diamond: '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
   tokens: { 
-    STETH: isLocalDev 
-      ? '0xc5a5C42992dECbae36851359345FE25997F5C42d' as `0x${string}` // 本地部署的WRMB地址（用作STETH）
-      : '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Sepolia stETH地址
-    FXUSD: isLocalDev 
-      ? '0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E' as `0x${string}` // 本地部署的FXUSD地址
-      : '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
-    USDC: isLocalDev 
-      ? '0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690' as `0x${string}` // 本地部署的USDC地址
-      : '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}`, // Sepolia测试网USDC地址
-    WBTC: isLocalDev 
-      ? '0x67d269191c92Caf3cD7723F116c85e6E9bf55933' as `0x${string}` // 本地部署的WBTC地址
-      : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}`, // Sepolia测试网WBTC地址
-    WRMB: isLocalDev 
-      ? '0xc5a5C42992dECbae36851359345FE25997F5C42d' as `0x${string}` // 本地部署的WRMB地址
-      : '0x795751385c9ab8f832fda7f69a83e3804ee1d7f3' as `0x${string}`, // WRMB客户初始资金地址
-    USDT: isLocalDev 
-      ? '0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690' as `0x${string}` // 本地部署的USDT地址（使用USDC地址）
-      : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}` // Sepolia测试网USDT地址
+    STETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Sepolia stETH地址
+    FXUSD: '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
+    USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}`, // Sepolia测试网USDC地址
+    WBTC: '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}`, // Sepolia测试网WBTC地址
+    WRMB: '0x795751385c9ab8f832fda7f69a83e3804ee1d7f3' as `0x${string}`, // WRMB地址
+    USDT: '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}` // Sepolia测试网USDT地址
   }
 };
 
 export function getMeta(): Meta {
-  console.log('🔍 配置调试信息:');
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('NEXT_PUBLIC_USE_LOCAL:', process.env.NEXT_PUBLIC_USE_LOCAL);
-  console.log('window.location.hostname:', typeof window !== 'undefined' ? window.location.hostname : 'undefined');
-  console.log('isLocalDev:', isLocalDev);
+  console.log('🔍 配置信息:');
   console.log('当前链ID:', META.chainId);
   console.log('Diamond地址:', META.diamond);
   console.log('WRMB地址:', META.tokens.WRMB);
-  console.log('当前配置:', META);
   return META;
 }
 
-// 创建客户端 - 添加备用RPC和错误处理
+// 创建客户端 - 强制使用 Sepolia
 const createTransport = () => {
   if (typeof window !== 'undefined' && window.ethereum) {
     return custom(window.ethereum);
   }
   
-  // 本地开发使用本地RPC，否则使用Sepolia
-  const rpcUrl = isLocalDev 
-    ? 'http://127.0.0.1:8545' 
-    : 'https://rpc.sepolia.org';
-    
+  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.sepolia.org';
   return http(rpcUrl);
 };
 
-const selectedChain = isLocalDev ? localhost : sepolia;
-console.log('🔗 Viem客户端链配置:', selectedChain.id, selectedChain.name);
+console.log('🔗 Viem客户端链配置:', sepolia.id, sepolia.name);
 
 export const publicClient = createPublicClient({ 
-  chain: selectedChain, 
+  chain: sepolia, 
   transport: createTransport()
 });
 
 export const walletClient = createWalletClient({ 
-  chain: selectedChain, 
+  chain: sepolia, 
   transport: createTransport()
 });
 
@@ -177,12 +109,6 @@ export async function ensureApprove(
     });
 
     console.log('授权交易已发送:', hash);
-    
-    // 在本地开发环境中，可以跳过等待确认以提高速度
-    if (isLocalDev) {
-      console.log('本地开发模式：跳过等待交易确认');
-      return;
-    }
     
     // 添加超时和错误处理
     try {

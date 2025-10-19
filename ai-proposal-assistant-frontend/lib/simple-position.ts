@@ -20,6 +20,7 @@ export const POOL_MANAGER_ABI = parseAbi([
   'function hasRole(bytes32 role, address account) view returns (bool)',
   'function updateRateProvider(address token, address rateProvider) external',
   'function tokenRates(address token) view returns (uint256, address)',
+  'function updatePoolCapacity(address pool, uint256 collateralCapacity, uint256 debtCapacity) external',
 ]);
 
 // ERC20 ABI
@@ -31,25 +32,8 @@ export const ERC20_ABI = parseAbi([
   'function symbol() external view returns (string)',
 ]);
 
-// 创建客户端 - 使用环境变量配置
+// 创建客户端 - 强制使用 Sepolia 测试网
 const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.sepolia.org';
-const chainId = process.env.NEXT_PUBLIC_CHAIN_ID ? parseInt(process.env.NEXT_PUBLIC_CHAIN_ID) : 11155111;
-
-// 判断是否是本地开发环境
-const isLocalDev = chainId === 31337 || chainId === 1337;
-
-// 定义链配置
-const currentChain = isLocalDev
-  ? {
-      id: chainId,
-      name: 'Localhost',
-      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-      rpcUrls: {
-        default: { http: [rpcUrl] },
-        public: { http: [rpcUrl] },
-      },
-    }
-  : sepolia;
 
 const createTransport = () => {
   if (typeof window !== 'undefined' && window.ethereum) {
@@ -59,12 +43,12 @@ const createTransport = () => {
 };
 
 export const publicClient = createPublicClient({
-  chain: currentChain,
+  chain: sepolia,
   transport: createTransport()
 });
 
 export const walletClient = createWalletClient({
-  chain: currentChain,
+  chain: sepolia,
   transport: createTransport()
 });
 
@@ -233,6 +217,36 @@ export async function updateTokenRateProvider(
     return hash;
   } catch (error) {
     console.error('更新汇率提供者失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 更新池子容量
+ * @param poolAddress 池子地址
+ * @param collateralCapacity 抵押品容量（bigint）
+ * @param debtCapacity 债务容量（bigint）
+ * @param userAddress 用户地址
+ */
+export async function updatePoolCapacity(
+  poolAddress: `0x${string}`,
+  collateralCapacity: bigint,
+  debtCapacity: bigint,
+  userAddress: `0x${string}`
+): Promise<`0x${string}`> {
+  try {
+    const hash = await walletClient.writeContract({
+      account: userAddress,
+      address: CONTRACTS.PoolManager,
+      abi: POOL_MANAGER_ABI,
+      functionName: 'updatePoolCapacity',
+      args: [poolAddress, collateralCapacity, debtCapacity]
+    });
+    
+    console.log('更新池子容量交易已发送:', hash);
+    return hash;
+  } catch (error) {
+    console.error('更新池子容量失败:', error);
     throw error;
   }
 }
