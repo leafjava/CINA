@@ -69,6 +69,7 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
     setStatus('开始一步到位杠杆开仓...');
     
     // 1. 检查WRMB余额
+    console.log('72检查WRMB余额')
     setStatus('检查WRMB余额...');
     const wrmbBalance = await getTokenBalance(meta.tokens.WRMB, address);
     const wrmbAmountWei = parseEther(wrmbAmount);
@@ -76,6 +77,8 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
     if (wrmbBalance < wrmbAmountWei) {
       throw new Error(`WRMB余额不足，当前余额: ${formatEther(wrmbBalance)}`);
     }
+
+    console.log('81授权WRMB...')
 
     // 2. 授权WRMB
     setStatus('授权WRMB...');

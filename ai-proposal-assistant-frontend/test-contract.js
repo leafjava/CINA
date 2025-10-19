@@ -49,6 +49,7 @@ async function testContract() {
   } catch (error) {
     console.error('❌ 合约测试失败:', error.message);
   }
+
 }
 
 // 如果直接运行此脚本
