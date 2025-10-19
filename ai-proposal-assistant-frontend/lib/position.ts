@@ -26,32 +26,40 @@ export type Meta = {
 //   }
 // };
 
-// 本地开发配置
-const isLocalDev = process.env.NODE_ENV === 'development' && (process.env.NEXT_PUBLIC_USE_LOCAL === 'true' || typeof window !== 'undefined' && window.location.hostname === 'localhost');
+// 本地开发配置 - 强制检测本地环境
+const isLocalDev = (
+  process.env.NODE_ENV === 'development' && (
+    process.env.NEXT_PUBLIC_USE_LOCAL === 'true' || 
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost') ||
+    (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1')
+  )
+) || (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+
+console.log('isLocalDev',isLocalDev)
 
 export const META: Meta = {
   chainId: isLocalDev ? 1337 : 11155111, // 本地开发使用1337，否则使用Sepolia测试网
   diamond: isLocalDev 
-    ? '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318' as `0x${string}` // 本地部署的Diamond合约地址
+    ? '0x5FbDB2315678afecb367f032d93F642f64180aa3' as `0x${string}` // 本地部署的Diamond合约地址
     : '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
   tokens: { 
     STETH: isLocalDev 
-      ? '0x610178dA211FEF7D417bC0e6FeD39F05609AD788' as `0x${string}` // 本地部署的WRMB地址（用作STETH）
+      ? '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' as `0x${string}` // 本地部署的WRMB地址（用作STETH）
       : '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Sepolia stETH地址
     FXUSD: isLocalDev 
-      ? '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0' as `0x${string}` // 本地部署的FXUSD地址
+      ? '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' as `0x${string}` // 本地部署的FXUSD地址
       : '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
     USDC: isLocalDev 
-      ? '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82' as `0x${string}` // 本地部署的USDC地址
+      ? '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9' as `0x${string}` // 本地部署的USDC地址
       : '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}`, // Sepolia测试网USDC地址
     WBTC: isLocalDev 
-      ? '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e' as `0x${string}` // 本地部署的WBTC地址
+      ? '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0' as `0x${string}` // 本地部署的WBTC地址
       : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}`, // Sepolia测试网WBTC地址
     WRMB: isLocalDev 
-      ? '0x610178dA211FEF7D417bC0e6FeD39F05609AD788' as `0x${string}` // 本地部署的WRMB地址
+      ? '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' as `0x${string}` // 本地部署的WRMB地址
       : '0x795751385c9ab8f832fda7f69a83e3804ee1d7f3' as `0x${string}`, // WRMB客户初始资金地址
     USDT: isLocalDev 
-      ? '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82' as `0x${string}` // 本地部署的USDT地址（使用USDC地址）
+      ? '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9' as `0x${string}` // 本地部署的USDT地址（使用USDC地址）
       : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}` // Sepolia测试网USDT地址
   }
 };
@@ -62,6 +70,9 @@ export function getMeta(): Meta {
   console.log('NEXT_PUBLIC_USE_LOCAL:', process.env.NEXT_PUBLIC_USE_LOCAL);
   console.log('window.location.hostname:', typeof window !== 'undefined' ? window.location.hostname : 'undefined');
   console.log('isLocalDev:', isLocalDev);
+  console.log('当前链ID:', META.chainId);
+  console.log('Diamond地址:', META.diamond);
+  console.log('WRMB地址:', META.tokens.WRMB);
   console.log('当前配置:', META);
   return META;
 }
@@ -80,13 +91,16 @@ const createTransport = () => {
   return http(rpcUrl);
 };
 
+const selectedChain = isLocalDev ? localhost : sepolia;
+console.log('🔗 Viem客户端链配置:', selectedChain.id, selectedChain.name);
+
 export const publicClient = createPublicClient({ 
-  chain: sepolia, 
+  chain: selectedChain, 
   transport: createTransport()
 });
 
 export const walletClient = createWalletClient({ 
-  chain: sepolia, 
+  chain: selectedChain, 
   transport: createTransport()
 });
 

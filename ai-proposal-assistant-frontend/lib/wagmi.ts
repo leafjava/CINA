@@ -2,9 +2,41 @@
 import { http, createConfig } from 'wagmi';
 import { sepolia, mainnet } from 'viem/chains';
 import { injected, metaMask, walletConnect } from 'wagmi/connectors';
+import { defineChain } from 'viem';
 
-const chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 11155111);
-const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.sepolia.org';
+// 本地开发链配置
+const localhost = defineChain({
+  id: 1337,
+  name: 'Localhost',
+  network: 'localhost',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Ether',
+    symbol: 'ETH',
+  },
+  rpcUrls: {
+    default: {
+      http: ['http://127.0.0.1:8545'],
+    },
+    public: {
+      http: ['http://127.0.0.1:8545'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'Local', url: 'http://localhost:8545' },
+  },
+});
+
+const isLocalDev = (
+  process.env.NODE_ENV === 'development' && (
+    process.env.NEXT_PUBLIC_USE_LOCAL === 'true' || 
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost') ||
+    (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1')
+  )
+) || (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+
+const chainId = isLocalDev ? 1337 : Number(process.env.NEXT_PUBLIC_CHAIN_ID || 11155111);
+const rpcUrl = isLocalDev ? 'http://127.0.0.1:8545' : (process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.sepolia.org');
 
 // 检查WalletConnect项目ID
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
@@ -14,7 +46,7 @@ if (!walletConnectProjectId) {
   console.warn('请访问 https://cloud.walletconnect.com/ 获取项目ID');
 }
 
-const chains = [sepolia, mainnet];
+const chains = isLocalDev ? [localhost, sepolia, mainnet] : [sepolia, mainnet];
 
 // 构建连接器数组
 const connectors = [
@@ -37,6 +69,7 @@ export const wagmiConfig = createConfig({
   chains,
   connectors,
   transports: {
+    [localhost.id]: http(rpcUrl),
     [sepolia.id]: http(rpcUrl),
     [mainnet.id]: http(),
   },
