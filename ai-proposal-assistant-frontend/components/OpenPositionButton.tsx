@@ -27,7 +27,7 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
   const { address, isConnected } = useAccount();
   const [isLoading, setIsLoading] = useState(false);
   const [collateralAmount, setCollateralAmount] = useState('1.0'); // 默认1个stETH
-  const [leverage, setLeverage] = useState('3.0'); // 默认3倍杠杆
+  const [leverage, setLeverage] = useState('1.0'); // 默认1倍杠杆
   const [status, setStatus] = useState<string>('');
   
   // 新增：一步到位杠杆开仓状态
