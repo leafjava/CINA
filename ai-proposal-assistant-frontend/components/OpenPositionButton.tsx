@@ -337,13 +337,15 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
         </Button>
 
         {status && (
-          <div className={`p-3 rounded-md text-sm ${
-            status.includes('成功') 
-              ? 'bg-green-50 text-green-700 border border-green-200' 
-              : status.includes('错误') 
-              ? 'bg-red-50 text-red-700 border border-red-200'
-              : 'bg-blue-50 text-blue-700 border border-blue-200'
-          }`}>
+          <div
+            className={`p-3 rounded-md text-sm ${
+              status.includes('成功')
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : status.includes('错误')
+                ? 'bg-red-50 text-red-700 border border-red-200'
+                : 'bg-blue-50 text-blue-700 border border-blue-200'
+            } whitespace-normal break-words`}
+          >
             {status}
           </div>
         )}

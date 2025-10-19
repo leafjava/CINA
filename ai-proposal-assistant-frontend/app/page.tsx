@@ -28,12 +28,12 @@ export default function HomePage() {
         >
           交易仓位
         </Link>
-        <Link 
+        {/* <Link 
           href="/proposals" 
           className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
         >
           提案管理
-        </Link>
+        </Link> */}
       </div>
 
         {/* 原有内容 */}
