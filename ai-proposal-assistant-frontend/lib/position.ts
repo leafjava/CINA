@@ -1,4 +1,4 @@
-import { createPublicClient, createWalletClient, custom, parseAbi, encodeFunctionData, encodeAbiParameters } from 'viem';
+import { createPublicClient, createWalletClient, custom, parseAbi, encodeFunctionData, encodeAbiParameters, http } from 'viem';
 import { sepolia } from 'viem/chains';
 
 // 1. 基础配置 - getMeta
@@ -43,23 +43,23 @@ export function getMeta(): Meta {
   return META;
 }
 
-// 创建客户端
+// 创建客户端 - 添加备用RPC和错误处理
+const createTransport = () => {
+  if (typeof window !== 'undefined' && window.ethereum) {
+    return custom(window.ethereum);
+  }
+  // 备用RPC端点
+  return http('https://rpc.sepolia.org');
+};
+
 export const publicClient = createPublicClient({ 
   chain: sepolia, 
-  transport: typeof window !== 'undefined' && window.ethereum 
-    ? custom(window.ethereum) 
-    : custom({
-        request: async () => { throw new Error('No ethereum provider'); }
-      } as any)
+  transport: createTransport()
 });
 
 export const walletClient = createWalletClient({ 
   chain: sepolia, 
-  transport: typeof window !== 'undefined' && window.ethereum 
-    ? custom(window.ethereum)
-    : custom({
-        request: async () => { throw new Error('No ethereum provider'); }
-      } as any)
+  transport: createTransport()
 });
 
 // ERC20 ABI
@@ -354,18 +354,27 @@ export async function getPositions(owner: `0x${string}`): Promise<Position[]> {
   } catch (error) {
     console.error('获取仓位失败:', error);
     
-    // 提供更详细的错误信息
+    // 网络错误时返回空数组而不是抛出错误
     if (error instanceof Error) {
+      if (error.message.includes('InternalRpcError') || 
+          error.message.includes('403') ||
+          error.message.includes('Non-200 status code')) {
+        console.warn('网络连接问题，返回空仓位列表');
+        return [];
+      }
+      
       if (error.message.includes('returned no data')) {
-        throw new Error(`合约函数调用失败：合约地址 ${META.diamond} 可能不包含 getPositions 函数，或者该函数未正确部署。请检查合约地址和ABI配置。`);
+        console.warn('合约函数调用失败，返回空仓位列表');
+        return [];
       } else if (error.message.includes('invalid address')) {
-        throw new Error(`无效的合约地址：${META.diamond}。请检查合约地址配置。`);
-      } else if (error.message.includes('验证合约')) {
-        throw new Error(`合约验证失败：${error.message}`);
+        console.warn('无效的合约地址，返回空仓位列表');
+        return [];
       }
     }
     
-    throw error;
+    // 对于其他错误，也返回空数组而不是抛出错误
+    console.warn('获取仓位时发生未知错误，返回空仓位列表');
+    return [];
   }
 }
 
@@ -445,24 +454,33 @@ export async function diagnoseNetworkConnection(): Promise<void> {
     console.log('=== 开始网络诊断 ===');
     
     // 1. 检查当前链ID
-    const chainId = await publicClient.getChainId();
-    console.log('当前链ID:', chainId);
-    console.log('配置链ID:', META.chainId);
-    console.log('链ID匹配:', chainId === META.chainId);
+    try {
+      const chainId = await publicClient.getChainId();
+      console.log('当前链ID:', chainId);
+      console.log('配置链ID:', META.chainId);
+      console.log('链ID匹配:', chainId === META.chainId);
+    } catch (error) {
+      console.warn('获取链ID失败:', error);
+    }
     
     // 2. 检查最新区块
-    const blockNumber = await publicClient.getBlockNumber();
-    console.log('最新区块号:', blockNumber.toString());
+    try {
+      const blockNumber = await publicClient.getBlockNumber();
+      console.log('最新区块号:', blockNumber.toString());
+    } catch (error) {
+      console.warn('获取区块号失败:', error);
+    }
     
     // 3. 检查合约代码
-    const code = await publicClient.getBytecode({ address: META.diamond });
-    console.log('合约代码长度:', code ? code.length : 0);
-    console.log('合约代码存在:', code && code !== '0x');
+    try {
+      const code = await publicClient.getBytecode({ address: META.diamond });
+      console.log('合约代码长度:', code ? code.length : 0);
+      console.log('合约代码存在:', code && code !== '0x');
+    } catch (error) {
+      console.warn('获取合约代码失败:', error);
+    }
     
-    // 4. 尝试不同的RPC端点
-    console.log('当前RPC配置:', sepolia.rpcUrls.default.http[0]);
-    
-    // 5. 检查地址格式
+    // 4. 检查地址格式
     console.log('合约地址格式:', META.diamond);
     console.log('地址长度:', META.diamond.length);
     console.log('地址格式正确:', META.diamond.startsWith('0x') && META.diamond.length === 42);
@@ -470,7 +488,8 @@ export async function diagnoseNetworkConnection(): Promise<void> {
     console.log('=== 网络诊断完成 ===');
     
   } catch (error) {
-    console.error('网络诊断失败:', error);
+    console.warn('网络诊断部分失败:', error);
+    // 不抛出错误，让程序继续运行
   }
 }
 
