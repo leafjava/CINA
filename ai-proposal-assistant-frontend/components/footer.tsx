@@ -83,6 +83,7 @@ export default function Footer({
         .filter(Boolean)
         .join(" ")}
       role="contentinfo"
+      style={{background: '#12121280'}}
     >
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-stretch">
