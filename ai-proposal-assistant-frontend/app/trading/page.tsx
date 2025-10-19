@@ -5,7 +5,7 @@ import OrderBook from '@/components/OrderBook';
 import TradingPanel from '@/components/TradingPanel';
 import AccountInfo from '@/components/AccountInfo';
 import { PriceProvider } from '@/contexts/PriceContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const AVAILABLE_SYMBOLS = [
@@ -36,6 +36,59 @@ export default function TradingPage() {
   const [symbol, setSymbol] = useState('ETHUSDT');
   const [leverage, setLeverage] = useState(20);
   const [showSymbolSelector, setShowSymbolSelector] = useState(false);
+
+  // 检测回退到首页的情况 - 强制刷新方案
+  useEffect(() => {
+    // 设置页面离开时的标记
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem('tradingPageLeft', 'true');
+    };
+
+    // 监听回退操作
+    const handlePopState = () => {
+      console.log('PopState detected in trading page');
+      // 立即设置标记
+      sessionStorage.setItem('tradingPageLeft', 'true');
+      
+      // 延迟检查并刷新
+      setTimeout(() => {
+        const currentPath = window.location.pathname;
+        console.log('Current path after popstate:', currentPath);
+        
+        if (currentPath === '/') {
+          console.log('Back to home detected, forcing refresh...');
+          window.location.reload();
+        }
+      }, 50);
+    };
+
+    // 监听页面隐藏/显示
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        sessionStorage.setItem('tradingPageLeft', 'true');
+      } else if (document.visibilityState === 'visible') {
+        const leftTrading = sessionStorage.getItem('tradingPageLeft');
+        const currentPath = window.location.pathname;
+        
+        if (leftTrading === 'true' && currentPath === '/') {
+          console.log('Back to home after leaving trading, refreshing...');
+          sessionStorage.removeItem('tradingPageLeft');
+          window.location.reload();
+        }
+      }
+    };
+
+    // 添加所有事件监听器
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   return (
     <div className="h-screen bg-[#0A0B0D] text-white flex flex-col overflow-hidden">
