@@ -27,36 +27,42 @@ export type Meta = {
 // };
 
 // 本地开发配置
-const isLocalDev = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_LOCAL === 'true';
+const isLocalDev = process.env.NODE_ENV === 'development' && (process.env.NEXT_PUBLIC_USE_LOCAL === 'true' || typeof window !== 'undefined' && window.location.hostname === 'localhost');
 
 export const META: Meta = {
   chainId: isLocalDev ? 1337 : 11155111, // 本地开发使用1337，否则使用Sepolia测试网
   diamond: isLocalDev 
-    ? '0x5FbDB2315678afecb367f032d93F642f64180aa3' as `0x${string}` // 本地部署的Diamond合约地址
+    ? '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318' as `0x${string}` // 本地部署的Diamond合约地址
     : '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
   tokens: { 
     STETH: isLocalDev 
-      ? '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' as `0x${string}` // 本地部署的stETH地址
+      ? '0x610178dA211FEF7D417bC0e6FeD39F05609AD788' as `0x${string}` // 本地部署的WRMB地址（用作STETH）
       : '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Sepolia stETH地址
     FXUSD: isLocalDev 
-      ? '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0' as `0x${string}` // 本地部署的FXUSD地址
+      ? '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0' as `0x${string}` // 本地部署的FXUSD地址
       : '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
     USDC: isLocalDev 
-      ? '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' as `0x${string}` // 本地部署的USDC地址
+      ? '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82' as `0x${string}` // 本地部署的USDC地址
       : '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}`, // Sepolia测试网USDC地址
     WBTC: isLocalDev 
-      ? '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9' as `0x${string}` // 本地部署的WBTC地址
+      ? '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e' as `0x${string}` // 本地部署的WBTC地址
       : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}`, // Sepolia测试网WBTC地址
     WRMB: isLocalDev 
-      ? '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707' as `0x${string}` // 本地部署的WRMB地址
+      ? '0x610178dA211FEF7D417bC0e6FeD39F05609AD788' as `0x${string}` // 本地部署的WRMB地址
       : '0x795751385c9ab8f832fda7f69a83e3804ee1d7f3' as `0x${string}`, // WRMB客户初始资金地址
     USDT: isLocalDev 
-      ? '0x2279B7A0a67DB372996a5FaB50D91eCC73e4F8A6' as `0x${string}` // 本地部署的USDT地址
+      ? '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82' as `0x${string}` // 本地部署的USDT地址（使用USDC地址）
       : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}` // Sepolia测试网USDT地址
   }
 };
 
 export function getMeta(): Meta {
+  console.log('🔍 配置调试信息:');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('NEXT_PUBLIC_USE_LOCAL:', process.env.NEXT_PUBLIC_USE_LOCAL);
+  console.log('window.location.hostname:', typeof window !== 'undefined' ? window.location.hostname : 'undefined');
+  console.log('isLocalDev:', isLocalDev);
+  console.log('当前配置:', META);
   return META;
 }
 
@@ -408,6 +414,20 @@ export async function getPositions(owner: `0x${string}`): Promise<Position[]> {
 // 辅助函数：获取代币余额
 export async function getTokenBalance(token: `0x${string}`, owner: `0x${string}`): Promise<bigint> {
   try {
+    console.log('🔍 获取代币余额调试信息:');
+    console.log('代币地址:', token);
+    console.log('所有者地址:', owner);
+    console.log('当前链ID:', await publicClient.getChainId());
+    
+    // 检查合约代码
+    const code = await publicClient.getBytecode({ address: token });
+    console.log('合约代码长度:', code ? code.length : 0);
+    console.log('合约代码存在:', code && code !== '0x');
+    
+    if (!code || code === '0x') {
+      throw new Error(`合约地址 ${token} 无效或未部署合约`);
+    }
+    
     return await publicClient.readContract({
       address: token,
       abi: ERC20_ABI,
