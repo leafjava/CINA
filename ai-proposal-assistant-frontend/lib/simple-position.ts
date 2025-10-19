@@ -18,6 +18,8 @@ export const POOL_MANAGER_ABI = parseAbi([
   'function getPosition(address pool, uint256 positionId) view returns (uint256, uint256)',
   'function getPoolInfo(address pool) view returns (uint256, uint256, address, address)',
   'function hasRole(bytes32 role, address account) view returns (bool)',
+  'function updateRateProvider(address token, address rateProvider) external',
+  'function tokenRates(address token) view returns (uint256, address)',
 ]);
 
 // ERC20 ABI
@@ -182,6 +184,56 @@ export async function checkContract(address: `0x${string}`, name: string): Promi
   } catch (error) {
     console.error(`检查${name}合约失败:`, error);
     return false;
+  }
+}
+
+/**
+ * 检查代币是否已设置汇率提供者
+ */
+export async function checkTokenRateProvider(tokenAddress: `0x${string}`): Promise<{ rate: bigint; provider: string }> {
+  try {
+    const result = await publicClient.readContract({
+      address: CONTRACTS.PoolManager,
+      abi: POOL_MANAGER_ABI,
+      functionName: 'tokenRates',
+      args: [tokenAddress]
+    });
+    
+    const [rate, provider] = result as [bigint, string];
+    console.log(`代币 ${tokenAddress} 汇率信息:`, { rate: rate.toString(), provider });
+    
+    return { rate, provider };
+  } catch (error) {
+    console.error('检查代币汇率失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 更新代币汇率提供者
+ * @param tokenAddress 代币地址
+ * @param rateProvider 汇率提供者地址（传 0x0000000000000000000000000000000000000000 使用默认汇率）
+ * @param userAddress 用户地址
+ */
+export async function updateTokenRateProvider(
+  tokenAddress: `0x${string}`,
+  rateProvider: `0x${string}`,
+  userAddress: `0x${string}`
+): Promise<`0x${string}`> {
+  try {
+    const hash = await walletClient.writeContract({
+      account: userAddress,
+      address: CONTRACTS.PoolManager,
+      abi: POOL_MANAGER_ABI,
+      functionName: 'updateRateProvider',
+      args: [tokenAddress, rateProvider]
+    });
+    
+    console.log('更新汇率提供者交易已发送:', hash);
+    return hash;
+  } catch (error) {
+    console.error('更新汇率提供者失败:', error);
+    throw error;
   }
 }
 

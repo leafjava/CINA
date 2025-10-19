@@ -19,6 +19,7 @@ import {
   waitForTransaction,
   getPositionInfo,
   checkContract,
+  checkTokenRateProvider,
   type SimpleOpenPositionParams
 } from '@/lib/simple-position';
 import Link from 'next/link';
@@ -135,11 +136,30 @@ export default function SimpleOpenPage() {
       await approveToken(currentToken.address, address, collateralWei, currentToken.symbol);
       setStatus(prev => prev + '\n✅ 授权成功');
 
-      // 3. 使用指定的 Position ID
+      // 3. 检查代币汇率提供者设置（可选，不阻止开仓）
+      setStatus(prev => prev + `\n\n🔧 检查${currentToken.symbol}汇率设置...`);
+      try {
+        const rateInfo = await checkTokenRateProvider(currentToken.address);
+        
+        if (rateInfo.rate === 0n) {
+          setStatus(prev => prev + `\n⚠️ ${currentToken.symbol}未设置汇率，将使用合约默认逻辑`);
+          setStatus(prev => prev + '\n💡 如开仓失败，请管理员在 /admin 页面设置汇率');
+        } else {
+          setStatus(prev => prev + `\n✅ 汇率已设置 (rate: ${rateInfo.rate.toString()})`);
+          if (rateInfo.provider !== '0x0000000000000000000000000000000000000000') {
+            setStatus(prev => prev + `\n   汇率提供者: ${rateInfo.provider.slice(0, 10)}...`);
+          }
+        }
+      } catch (e: any) {
+        setStatus(prev => prev + `\n⚠️ 无法检查汇率: ${e.message}`);
+        setStatus(prev => prev + '\n将继续尝试开仓...');
+      }
+
+      // 4. 使用指定的 Position ID
       const posId = BigInt(positionId);
       setStatus(prev => prev + `\n\n🔢 使用 Position ID: ${posId}`);
 
-      // 4. 计算债务金额
+      // 5. 计算债务金额
       const ltvRatio = parseFloat(ltv) / 100;
       const debtAmount = collateralWei * BigInt(Math.floor(ltvRatio * 10000)) / 10000n;
       // 如果抵押品不是18 decimals，需要转换到18 decimals (fxUSD)
@@ -153,7 +173,7 @@ export default function SimpleOpenPage() {
       setStatus(prev => prev + `\n   LTV: ${ltv}%`);
       setStatus(prev => prev + `\n   债务: ${formatUnits(debtWei, 18)} fxUSD`);
 
-      // 5. 获取池子信息
+      // 6. 获取池子信息
       setStatus(prev => prev + '\n\n🏊 检查池子状态...');
       try {
         const poolInfo = await getPoolInfo(CONTRACTS.AaveFundingPool);
@@ -164,7 +184,7 @@ export default function SimpleOpenPage() {
         setStatus(prev => prev + `\n⚠️ 无法读取池子信息: ${e.message}`);
       }
 
-      // 6. 执行开仓
+      // 7. 执行开仓
       setStatus(prev => prev + '\n\n📤 发送开仓交易，请在MetaMask中确认...');
       
       const params: SimpleOpenPositionParams = {
@@ -182,14 +202,14 @@ export default function SimpleOpenPage() {
       setStatus(prev => prev + `\n✅ 交易已发送: ${txHash}`);
       setStatus(prev => prev + `\n\n⏳ 等待交易确认...`);
 
-      // 7. 等待确认
+      // 8. 等待确认
       const result = await waitForTransaction(txHash);
       
       if (result === 'success') {
         setStatus(prev => prev + '\n\n🎉 开仓成功！');
         setStatus(prev => prev + `\n\n在Sepolia Etherscan查看:\nhttps://sepolia.etherscan.io/tx/${txHash}`);
 
-        // 8. 查询仓位信息
+        // 9. 查询仓位信息
         setStatus(prev => prev + '\n\n📋 查询仓位信息...');
         try {
           const position = await getPositionInfo(CONTRACTS.AaveFundingPool, posId);

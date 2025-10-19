@@ -46,6 +46,12 @@ export default function HomePage() {
         >
           ⚡ 闪电贷测试
         </Link>
+        <Link 
+          href="/admin" 
+          className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg hover:from-red-600 hover:to-orange-600 transition-colors font-medium"
+        >
+          🔑 管理员工具
+        </Link>
       </div>
 
         {/* 原有内容 */}
