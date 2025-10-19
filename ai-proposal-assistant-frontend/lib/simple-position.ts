@@ -250,14 +250,14 @@ export async function getPoolInfo(pool: `0x${string}`) {
  */
 export async function getPositionInfo(
   pool: `0x${string}`,
-  positionId: number
+  positionId: bigint
 ): Promise<{ collateral: bigint; debt: bigint }> {
   try {
     const result = await publicClient.readContract({
       address: CONTRACTS.PoolManager,
       abi: POOL_MANAGER_ABI,
       functionName: 'getPosition',
-      args: [pool, BigInt(positionId)]
+      args: [pool, positionId]
     });
 
     // 返回值是数组 [collateral, debt]
