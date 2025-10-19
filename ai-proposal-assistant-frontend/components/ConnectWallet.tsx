@@ -12,9 +12,11 @@ export default function ConnectWallet() {
 
   const handleConnect = async () => {
     try {
+      console.log('15钱包连接')
       setIsConnecting(true);
       const injectedConnector = connectors.find(connector => connector.type === 'injected');
       if (injectedConnector) {
+        console.log('19injectedConnector',injectedConnector)
         await connect({ connector: injectedConnector });
       } else {
         console.error('No injected connector found');
