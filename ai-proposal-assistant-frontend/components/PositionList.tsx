@@ -131,7 +131,7 @@ export default function PositionList() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">抵押物代币</p>
-                  <p className="font-medium text-black">{position.collateralToken}</p>
+                  <p className="font-medium text-black" style={{wordWrap: 'break-word'}}>{position.collateralToken}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">抵押物数量</p>
