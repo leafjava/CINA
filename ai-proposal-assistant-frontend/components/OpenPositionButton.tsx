@@ -65,7 +65,7 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
     }
   };
 
-  const handleLeveragePosition = async (meta: any, address: string) => {
+  const handleLeveragePosition = async (meta: any, address: `0x${string}`) => {
     setStatus('开始一步到位杠杆开仓...');
     
     // 1. 检查WRMB余额
@@ -129,7 +129,7 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
     }
   };
 
-  const handleTraditionalPosition = async (meta: any, address: string) => {
+  const handleTraditionalPosition = async (meta: any, address: `0x${string}`) => {
     setStatus('开始传统开仓...');
     
     // 1. 检查stETH余额

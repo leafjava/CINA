@@ -1,6 +1,6 @@
 'use client';
 import { http, createConfig } from 'wagmi';
-import { sepolia, mainnet } from 'viem/chains';
+import { sepolia, mainnet, type Chain } from 'viem/chains';
 import { injected, metaMask, walletConnect } from 'wagmi/connectors';
 import { defineChain } from 'viem';
 
@@ -46,7 +46,10 @@ if (!walletConnectProjectId) {
   console.warn('请访问 https://cloud.walletconnect.com/ 获取项目ID');
 }
 
-const chains = isLocalDev ? [localhost, sepolia, mainnet] : [sepolia, mainnet];
+// 定义链配置 - 确保类型正确
+const chains: readonly [Chain, ...Chain[]] = isLocalDev 
+  ? [localhost, sepolia, mainnet] 
+  : [sepolia, mainnet];
 
 // 构建连接器数组
 const connectors = [
@@ -57,8 +60,10 @@ const connectors = [
 // 只有在有projectId时才添加WalletConnect连接器
 if (walletConnectProjectId && walletConnectProjectId !== 'your_walletconnect_project_id_here') {
   connectors.push(
+    // @ts-ignore - WalletConnect 连接器类型暂时不兼容 wagmi v2，但运行时正常
     walletConnect({
       projectId: walletConnectProjectId,
+      showQrModal: true,
     })
   );
 } else {
