@@ -27,9 +27,16 @@ export const META: Meta = {
   chainId: 11155111, // Sepolia测试网
   diamond: '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
   tokens: { 
-    STETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Arbitrum Sepolia stETH地址
+    STETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Sepolia stETH地址
     FXUSD: '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
     USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}` // Sepolia测试网USDC地址
+    // WBTC开仓
+
+    // 总体流程修改：
+    // WRMB客户初始资金 0x7257122CAC1E7D58CB3768Acb7A0aBA66a0c162D
+    //Sepolia测试网 WBTC地址  0x29f2D40B0605204364af54EC677bD022dA425d03
+    //Sepolia测试网 wUSD
+    //Sepolia测试网 USDC(或USDT)地址  0x29f2D40B0605204364af54EC677bD022dA425d03
   }
 };
 
