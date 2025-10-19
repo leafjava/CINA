@@ -210,7 +210,7 @@ export async function openLeveragePosition(params: LeverageOpenPositionParams): 
     if (wrmbBalance < params.wrmbAmount) {
       throw new Error(`WRMB余额不足，当前余额: ${wrmbBalance.toString()}`);
     }
-
+    console.log('213')
     // 2. 授权WRMB给Diamond合约
     await ensureApprove(
       META.tokens.WRMB,
@@ -218,6 +218,7 @@ export async function openLeveragePosition(params: LeverageOpenPositionParams): 
       META.diamond,
       params.wrmbAmount
     );
+    console.log('221')
 
     // 3. 构造闪电贷开仓参数
     // 流程：WRMB买WBTC -> 闪电贷借WBTC -> 存入金库抵押 -> 铸FXUSD -> 卖FXUSD买WBTC -> 还闪电贷
@@ -251,12 +252,16 @@ export async function openLeveragePosition(params: LeverageOpenPositionParams): 
       ]
     });
 
+    console.log('255',params.user,META.diamond,data)
+
     const hash = await walletClient.sendTransaction({
       account: params.user,
       to: META.diamond,
       data,
       value: 0n
     });
+
+    console.log('264')
 
     console.log('一步到位杠杆开仓交易已发送:', hash);
     return hash;
