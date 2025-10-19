@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "D:\\VoteAIProject\\ai-proposal-assistant-frontend\\contracts\\MockDiamond.sol": {
-      "lastModificationDate": 1760861384500,
-      "contentHash": "6612114f56aa6765010febe250e11a96",
+      "lastModificationDate": 1760863898386,
+      "contentHash": "a0954b131cb346f845e6ef140d89125b",
       "sourceName": "contracts/MockDiamond.sol",
       "solcConfig": {
         "version": "0.8.20",

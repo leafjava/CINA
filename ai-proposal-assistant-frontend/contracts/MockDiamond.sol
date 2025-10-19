@@ -22,18 +22,20 @@ contract MockDiamond is Ownable {
         address tokenIn,
         uint256 amountIn,
         address tokenOut,
-        uint256 minAmountOut,
-        address swapTarget,
-        bytes calldata swapData
+        bytes calldata swapData,
+        address pool,
+        uint256 positionId,
+        uint256 amount,
+        bytes calldata data
     ) external payable {
         // 模拟开仓逻辑
-        uint256 positionId = nextPositionId++;
-        positionOwners[positionId] = msg.sender;
-        positionCollateralTokens[positionId] = tokenIn;
-        positionCollateralAmounts[positionId] = amountIn;
-        positionDebtAmounts[positionId] = amountIn * 2; // 模拟2倍杠杆
+        uint256 newPositionId = nextPositionId++;
+        positionOwners[newPositionId] = msg.sender;
+        positionCollateralTokens[newPositionId] = tokenIn;
+        positionCollateralAmounts[newPositionId] = amountIn;
+        positionDebtAmounts[newPositionId] = amountIn * 2; // 模拟2倍杠杆
         
-        emit PositionOpened(positionId, msg.sender, tokenIn, amountIn);
+        emit PositionOpened(newPositionId, msg.sender, tokenIn, amountIn);
     }
     
     // 模拟平仓函数
