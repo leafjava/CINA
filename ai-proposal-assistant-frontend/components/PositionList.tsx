@@ -69,7 +69,7 @@ export default function PositionList() {
   return (
     <div className="p-6 border rounded-lg bg-white shadow-sm">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">我的仓位</h3>
+        <h3 className="text-lg font-semibold text-black">我的仓位</h3>
         <button
           onClick={loadPositions}
           disabled={isLoading}
@@ -127,19 +127,19 @@ export default function PositionList() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">仓位ID</p>
-                  <p className="font-medium">{position.id.toString()}</p>
+                  <p className="font-medium text-black">{position.id.toString()}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">抵押物代币</p>
-                  <p className="font-medium">{position.collateralToken}</p>
+                  <p className="font-medium text-black">{position.collateralToken}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">抵押物数量</p>
-                  <p className="font-medium">{formatEther(position.collateralAmount)}</p>
+                  <p className="font-medium text-black">{formatEther(position.collateralAmount)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">债务数量</p>
-                  <p className="font-medium">{formatEther(position.debtAmount)}</p>
+                  <p className="font-medium text-black">{formatEther(position.debtAmount)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">健康因子</p>
@@ -149,13 +149,13 @@ export default function PositionList() {
                       : position.healthFactor > 1000000n 
                       ? 'text-yellow-600' 
                       : 'text-red-600'
-                  }`}>
+                  }  text-black`}>
                     {(Number(position.healthFactor) / 1000000).toFixed(2)}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">杠杆倍数</p>
-                  <p className="font-medium">
+                  <p className="font-medium text-black">
                     {position.collateralAmount > 0n 
                       ? (Number(position.debtAmount + position.collateralAmount) / Number(position.collateralAmount)).toFixed(2)
                       : '0'
