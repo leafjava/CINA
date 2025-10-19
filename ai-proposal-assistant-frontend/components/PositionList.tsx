@@ -35,6 +35,10 @@ export default function PositionList() {
           errorMessage = '当前合约不支持仓位查询功能，这是演示版本';
         } else if (err.message.includes('returned no data')) {
           errorMessage = '合约函数调用失败，请检查网络连接和合约状态';
+        } else if (err.message.includes('AbiFunctionNotFoundError')) {
+          errorMessage = '合约接口不匹配，这是演示版本，仓位查询功能正在开发中';
+        } else if (err.message.includes('Function "getPositions" not found')) {
+          errorMessage = '合约不支持getPositions函数，这是演示版本';
         } else {
           errorMessage = err.message;
         }
