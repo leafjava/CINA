@@ -33,12 +33,23 @@ contract MockDiamond is Ownable {
         uint256 amount,
         bytes calldata data
     ) external payable {
+        // 从data中解析杠杆倍数
+        uint256 leverageMultiplier = 200; // 默认2倍杠杆 (200 = 2.0 * 100)
+        
+        // 如果data不为空，尝试解析杠杆倍数
+        if (data.length >= 32) {
+            // 假设data的前32字节包含杠杆倍数 (以100为基数，如200表示2.0倍)
+            leverageMultiplier = abi.decode(data, (uint256));
+        }
+        
         // 模拟开仓逻辑
         uint256 newPositionId = nextPositionId++;
         positionOwners[newPositionId] = msg.sender;
         positionCollateralTokens[newPositionId] = swapParams.tokenIn;
         positionCollateralAmounts[newPositionId] = swapParams.amountIn;
-        positionDebtAmounts[newPositionId] = swapParams.amountIn * 2; // 模拟2倍杠杆
+        
+        // 使用动态杠杆倍数计算债务
+        positionDebtAmounts[newPositionId] = (swapParams.amountIn * leverageMultiplier) / 100;
         
         emit PositionOpened(newPositionId, msg.sender, swapParams.tokenIn, swapParams.amountIn);
     }
@@ -75,6 +86,18 @@ contract MockDiamond is Ownable {
     // 添加一个简单的测试函数
     function testFunction() external pure returns (string memory) {
         return "MockDiamond is working!";
+    }
+    
+    // 清空所有仓位 - 仅限合约所有者
+    function clearAllPositions() external onlyOwner {
+        nextPositionId = 1;
+        emit PositionClosed(0, msg.sender); // 发出清空事件
+    }
+    
+    // 清空指定用户的仓位
+    function clearUserPositions(address user) external onlyOwner {
+        // 这里可以添加更复杂的逻辑来清空特定用户的仓位
+        emit PositionClosed(0, user);
     }
 }
 

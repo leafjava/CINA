@@ -100,7 +100,7 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
       user: address,
       wrmbAmount: wrmbAmountWei,
       wbtcAmount: wbtcAmountWei,
-      leverageMultiplier: leverageMultiplier,
+      leverageMultiplier: leverageMultiplier, //杠杆倍数
       minFxUSDMint: minFxUSDMint,
       minWbtcOut: minWbtcOut,
       swapData: '0x' // 暂时不进行DEX交换

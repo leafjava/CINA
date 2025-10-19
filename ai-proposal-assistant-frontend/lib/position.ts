@@ -63,26 +63,26 @@ console.log('isLocalDev',isLocalDev)
 export const META: Meta = {
   chainId: isLocalDev ? 1337 : 11155111, // 本地开发使用1337，否则使用Sepolia测试网
   diamond: isLocalDev 
-    ? '0x09635F643e140090A9A8Dcd712eD6285858ceBef' as `0x${string}` // 本地部署的Diamond合约地址
+    ? '0x82e01223d51Eb87e16A03E24687EDF0F294da6f1' as `0x${string}` // 本地部署的Diamond合约地址
     : '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
   tokens: { 
     STETH: isLocalDev 
-      ? '0xc5a5C42992dECbae36851359345FE25997F5C42d' as `0x${string}` // 本地部署的WRMB地址（用作STETH）
+      ? '0x2bdCC0de6bE1f7D2ee689a0342D76F52E8EFABa3' as `0x${string}` // 本地部署的WRMB地址（用作STETH）
       : '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Sepolia stETH地址
     FXUSD: isLocalDev 
-      ? '0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E' as `0x${string}` // 本地部署的FXUSD地址
+      ? '0x7bc06c482DEAd17c0e297aFbC32f6e63d3846650' as `0x${string}` // 本地部署的FXUSD地址
       : '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
     USDC: isLocalDev 
-      ? '0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690' as `0x${string}` // 本地部署的USDC地址
+      ? '0xc351628EB244ec633d5f21fBD6621e1a683B1181' as `0x${string}` // 本地部署的USDC地址
       : '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}`, // Sepolia测试网USDC地址
     WBTC: isLocalDev 
-      ? '0x67d269191c92Caf3cD7723F116c85e6E9bf55933' as `0x${string}` // 本地部署的WBTC地址
+      ? '0x7969c5eD335650692Bc04293B07F5BF2e7A673C0' as `0x${string}` // 本地部署的WBTC地址
       : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}`, // Sepolia测试网WBTC地址
     WRMB: isLocalDev 
-      ? '0xc5a5C42992dECbae36851359345FE25997F5C42d' as `0x${string}` // 本地部署的WRMB地址
+      ? '0x2bdCC0de6bE1f7D2ee689a0342D76F52E8EFABa3' as `0x${string}` // 本地部署的WRMB地址
       : '0x795751385c9ab8f832fda7f69a83e3804ee1d7f3' as `0x${string}`, // WRMB客户初始资金地址
     USDT: isLocalDev 
-      ? '0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690' as `0x${string}` // 本地部署的USDT地址（使用USDC地址）
+      ? '0xc351628EB244ec633d5f21fBD6621e1a683B1181' as `0x${string}` // 本地部署的USDT地址（使用USDC地址）
       : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}` // Sepolia测试网USDT地址
   }
 };
@@ -329,7 +329,7 @@ export async function openLeveragePosition(params: LeverageOpenPositionParams): 
           '0x0000000000000000000000000000000000000000000000000000000000000000', // miscData
           params.minFxUSDMint, // 最小铸造FXUSD数量
           '0x0000000000000000000000000000000000000000', // swapTarget
-          '0x' // swapData
+          encodeAbiParameters([{ type: 'uint256' }], [BigInt(Math.floor(params.leverageMultiplier * 100))]) // 杠杆倍数编码
         ])
       ]
     });
