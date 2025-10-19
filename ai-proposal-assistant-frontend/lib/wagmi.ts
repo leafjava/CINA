@@ -1,7 +1,7 @@
 'use client';
 import { http, createConfig } from 'wagmi';
 import { sepolia, mainnet } from 'viem/chains';
-import { injected, metaMask, walletConnect } from 'wagmi/connectors';
+import { injected, metaMask } from 'wagmi/connectors';
 import { defineChain } from 'viem';
 
 // 本地开发链配置
@@ -27,43 +27,17 @@ const localhost = defineChain({
   },
 });
 
-const isLocalDev = (
-  process.env.NODE_ENV === 'development' && (
-    process.env.NEXT_PUBLIC_USE_LOCAL === 'true' || 
-    (typeof window !== 'undefined' && window.location.hostname === 'localhost') ||
-    (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1')
-  )
-) || (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+const isLocalDev = process.env.NEXT_PUBLIC_USE_LOCAL === 'true';
 
 const chainId = isLocalDev ? 1337 : Number(process.env.NEXT_PUBLIC_CHAIN_ID || 11155111);
-const rpcUrl = isLocalDev ? 'http://127.0.0.1:8545' : (process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.sepolia.org');
+const rpcUrl = isLocalDev ? (process.env.NEXT_PUBLIC_RPC_URL || 'http://127.0.0.1:8545') : (process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.sepolia.org');
 
-// 检查WalletConnect项目ID
-const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+// WalletConnect 暂时移除以避免类型不兼容（可后续单独集成）
 
-if (!walletConnectProjectId) {
-  console.warn('⚠️ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID 未设置，WalletConnect功能可能无法正常工作');
-  console.warn('请访问 https://cloud.walletconnect.com/ 获取项目ID');
-}
-
-const chains = isLocalDev ? [localhost, sepolia, mainnet] : [sepolia, mainnet];
+const chains = [localhost, sepolia, mainnet] as const;
 
 // 构建连接器数组
-const connectors = [
-  injected(),
-  metaMask(),
-];
-
-// 只有在有projectId时才添加WalletConnect连接器
-if (walletConnectProjectId && walletConnectProjectId !== 'your_walletconnect_project_id_here') {
-  connectors.push(
-    walletConnect({
-      projectId: walletConnectProjectId,
-    })
-  );
-} else {
-  console.warn('WalletConnect连接器未启用，请配置有效的项目ID');
-}
+const connectors = [injected(), metaMask()];
 
 export const wagmiConfig = createConfig({
   chains,

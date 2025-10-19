@@ -62,6 +62,18 @@ async function main() {
   console.log("FXUSD代币:", fxusdAddress);
   console.log("USDC代币:", usdcAddress);
   
+  // 追加：输出 .env.local 片段，便于前端读取
+  console.log("\n🧩 请将以下内容复制到 .env.local（或覆盖现有值）：\n");
+  console.log(`NEXT_PUBLIC_USE_LOCAL=true`);
+  console.log(`NEXT_PUBLIC_CHAIN_ID=1337`);
+  console.log(`NEXT_PUBLIC_RPC_URL=http://127.0.0.1:8545`);
+  console.log(`NEXT_PUBLIC_DIAMOND_ADDRESS=${diamondAddress}`);
+  console.log(`NEXT_PUBLIC_WRMB_ADDRESS=${wrmbAddress}`);
+  console.log(`NEXT_PUBLIC_WBTC_ADDRESS=${wbtcAddress}`);
+  console.log(`NEXT_PUBLIC_FXUSD_ADDRESS=${fxusdAddress}`);
+  console.log(`NEXT_PUBLIC_USDC_ADDRESS=${usdcAddress}`);
+  console.log(`NEXT_PUBLIC_USDT_ADDRESS=${usdcAddress}`);
+
   console.log("\n🔑 测试账户:");
   console.log("部署者地址:", deployer.address);
   console.log("私钥:", deployer.privateKey);

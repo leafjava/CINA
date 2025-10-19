@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
+import { parseEther, formatEther, parseUnits } from 'viem';
 import { 
   getMeta, 
   ensureApprove, 
@@ -15,6 +15,7 @@ import {
   type LeverageOpenPositionParams,
   type Position
 } from '@/lib/position';
+import { operateOpenPosition, getOperateConfig } from '@/lib/position';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
@@ -46,13 +47,78 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
 
     try {
       const meta = getMeta();
+      const user = address as `0x${string}`;
+      const { poolManager, pool } = getOperateConfig();
+      
+      // 在 Sepolia 环境下，通过 PoolManager 的 operate 开仓（使用 WRMB 作为抵押）
+      if (meta.chainId === 11155111) {
+        setStatus('Sepolia: 使用 WRMB 作为抵押，通过 PoolManager operate 开仓...');
+
+        // 使用 WRMB 金额（18 位小数）
+        const baseAmountStr = wrmbAmount;
+        const collateralWrmb = parseEther(baseAmountStr || '0');
+
+        // 调试信息
+        console.log('=== 开仓调试信息 ===');
+        console.log('用户地址:', user);
+        console.log('PoolManager:', poolManager);
+        console.log('Pool:', pool);
+        console.log('WRMB代币:', meta.tokens.WRMB);
+        console.log('抵押金额:', collateralWrmb.toString());
+
+        // 检查WRMB余额
+        setStatus('检查WRMB余额...');
+        const wrmbBalance = await getTokenBalance(meta.tokens.WRMB as `0x${string}`, user);
+        console.log('WRMB余额:', wrmbBalance.toString());
+        
+        if (wrmbBalance < collateralWrmb) {
+          throw new Error(`WRMB余额不足！需要: ${collateralWrmb.toString()}, 当前: ${wrmbBalance.toString()}`);
+        }
+
+        // 授权 WRMB 给 PoolManager
+        setStatus('授权 WRMB 给 PoolManager...');
+        await ensureApprove(
+          meta.tokens.WRMB as `0x${string}`,
+          user,
+          poolManager,
+          collateralWrmb
+        );
+
+        // 借款金额：按 50% LTV（示例），与抵押同单位
+        const debtAmountWrmb = collateralWrmb / 2n;
+        console.log('债务金额:', debtAmountWrmb.toString());
+
+        setStatus('发送 operate 开仓交易...');
+        const { hash } = await operateOpenPosition({
+          user,
+          poolManager,
+          pool,
+          collateralDelta: collateralWrmb,
+          debtDelta: debtAmountWrmb,
+        });
+        setStatus(`交易已发送: ${hash}`);
+
+        setStatus('等待交易确认...');
+        const result = await watchTx(hash);
+        if (result === 'success') {
+          setStatus('开仓成功！');
+          setStatus('获取最新仓位信息...');
+          const positions = await getPositions(user);
+          onSuccess?.(positions);
+          setStatus(`开仓成功！交易哈希: ${hash}`);
+        } else {
+          throw new Error(`交易失败: ${result}`);
+        }
+
+        return; // 已处理完 Sepolia 流程
+      }
       
       if (tradingMode === 'leverage') {
         // 一步到位杠杆开仓流程
-        await handleLeveragePosition(meta, address);
+        await handleLeveragePosition(meta, user);
       } else {
         // 传统开仓流程
-        await handleTraditionalPosition(meta, address);
+        await handleTraditionalPosition(meta, user);
       }
 
     } catch (error) {
@@ -65,27 +131,20 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
     }
   };
 
-  const handleLeveragePosition = async (meta: any, address: string) => {
+  const handleLeveragePosition = async (meta: any, address: `0x${string}`) => {
     setStatus('开始一步到位杠杆开仓...');
     
-    // 1. 检查WRMB余额
-    console.log('72检查WRMB余额')
-    setStatus('检查WRMB余额...');
-    const wrmbBalance = await getTokenBalance(meta.tokens.WRMB, address);
+    // 1. 跳过WRMB余额检查，直接使用输入值
     const wrmbAmountWei = parseEther(wrmbAmount);
-    
-    if (wrmbBalance < wrmbAmountWei) {
-      throw new Error(`WRMB余额不足，当前余额: ${formatEther(wrmbBalance)}`);
-    }
 
     console.log('81授权WRMB...')
 
     // 2. 授权WRMB
     setStatus('授权WRMB...');
     await ensureApprove(
-      meta.tokens.WRMB,
+      meta.tokens.WRMB as `0x${string}`,
       address,
-      meta.diamond,
+      meta.diamond as `0x${string}`,
       wrmbAmountWei
     );
 
@@ -129,44 +188,45 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
     }
   };
 
-  const handleTraditionalPosition = async (meta: any, address: string) => {
-    setStatus('开始传统开仓...');
-    
+  const handleTraditionalPosition = async (meta: any, address: `0x${string}`) => {
+    setStatus('开始传统开仓（operate）...');
+
     // 1. 检查stETH余额
     setStatus('检查stETH余额...');
-    const stethBalance = await getTokenBalance(meta.tokens.STETH, address);
+    const stethBalance = await getTokenBalance(meta.tokens.STETH as `0x${string}`, address);
     const collateralAmountWei = parseEther(collateralAmount);
-    
+
     if (stethBalance < collateralAmountWei) {
       throw new Error(`stETH余额不足，当前余额: ${formatEther(stethBalance)}`);
     }
 
-    // 2. 确保授权
+    // 2. 授权 stETH 给 PoolManager/Router（使用 diamond 作为 spender 以保持一致）
     setStatus('检查并授权stETH...');
     await ensureApprove(
-      meta.tokens.STETH,
+      meta.tokens.STETH as `0x${string}`,
       address,
-      meta.diamond,
+      meta.diamond as `0x${string}`,
       collateralAmountWei
     );
 
-    // 3. 计算最小铸造FXUSD数量
-    const leverageBps = Math.floor(parseFloat(leverage) * 10000);
-    const minMintFxUSD = collateralAmountWei * BigInt(leverageBps) / 10000n;
+    // 3. 计算债务金额（根据杠杆倍数）
+    // 假设：collateral 作为 USDC 类似 1:1 估值，debt 为 collateral * (leverage - 1)
+    const leverageFloat = Math.max(1, parseFloat(leverage) || 1);
+    const debtPortion = leverageFloat > 1 ? leverageFloat - 1 : 0;
+    const debtAmountWei = BigInt(Math.floor(Number(collateralAmountWei) * debtPortion));
 
-    // 4. 构造开仓参数
-    const openPosParams: OpenPositionParams = {
+    // 4. 读取 operate 配置
+    const { poolManager, pool } = getOperateConfig();
+
+    // 5. 发送 operate 交易（开新仓）
+    setStatus('发送 operate 开仓交易...');
+    const { hash: txHash } = await operateOpenPosition({
       user: address,
-      collateralToken: meta.tokens.STETH,
-      collateralAmount: collateralAmountWei,
-      targetLeverageBps: leverageBps,
-      minMintFxUSD: minMintFxUSD,
-      dexSwapData: '0x'
-    };
-
-    // 5. 发送开仓交易
-    setStatus('发送开仓交易...');
-    const txHash = await openPositionFlashLoan(openPosParams);
+      poolManager,
+      pool,
+      collateralDelta: collateralAmountWei,
+      debtDelta: debtAmountWei,
+    });
     setStatus(`交易已发送: ${txHash}`);
 
     // 6. 等待交易确认
@@ -175,11 +235,11 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
 
     if (result === 'success') {
       setStatus('开仓成功！');
-      
+
       // 7. 获取最新仓位信息
       setStatus('获取最新仓位信息...');
       const positions = await getPositions(address);
-      
+
       onSuccess?.(positions);
       setStatus(`开仓成功！交易哈希: ${txHash}`);
     } else {
