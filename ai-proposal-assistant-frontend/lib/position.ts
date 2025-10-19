@@ -26,16 +26,33 @@ export type Meta = {
 //   }
 // };
 
+// 本地开发配置
+const isLocalDev = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_LOCAL === 'true';
+
 export const META: Meta = {
-  chainId: 11155111, // Sepolia测试网
-  diamond: '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
+  chainId: isLocalDev ? 1337 : 11155111, // 本地开发使用1337，否则使用Sepolia测试网
+  diamond: isLocalDev 
+    ? '0x5FbDB2315678afecb367f032d93F642f64180aa3' as `0x${string}` // 本地部署的Diamond合约地址
+    : '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
   tokens: { 
-    STETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Sepolia stETH地址
-    FXUSD: '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
-    USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}`, // Sepolia测试网USDC地址
-    WBTC: '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}`, // Sepolia测试网WBTC地址
-    WRMB: '0x795751385c9ab8f832fda7f69a83e3804ee1d7f3' as `0x${string}`, // WRMB客户初始资金地址
-    USDT: '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}` // Sepolia测试网USDT地址（与WBTC相同地址，需要确认）
+    STETH: isLocalDev 
+      ? '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' as `0x${string}` // 本地部署的stETH地址
+      : '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Sepolia stETH地址
+    FXUSD: isLocalDev 
+      ? '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0' as `0x${string}` // 本地部署的FXUSD地址
+      : '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
+    USDC: isLocalDev 
+      ? '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' as `0x${string}` // 本地部署的USDC地址
+      : '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}`, // Sepolia测试网USDC地址
+    WBTC: isLocalDev 
+      ? '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9' as `0x${string}` // 本地部署的WBTC地址
+      : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}`, // Sepolia测试网WBTC地址
+    WRMB: isLocalDev 
+      ? '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707' as `0x${string}` // 本地部署的WRMB地址
+      : '0x795751385c9ab8f832fda7f69a83e3804ee1d7f3' as `0x${string}`, // WRMB客户初始资金地址
+    USDT: isLocalDev 
+      ? '0x2279B7A0a67DB372996a5FaB50D91eCC73e4F8A6' as `0x${string}` // 本地部署的USDT地址
+      : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}` // Sepolia测试网USDT地址
   }
 };
 
@@ -48,8 +65,13 @@ const createTransport = () => {
   if (typeof window !== 'undefined' && window.ethereum) {
     return custom(window.ethereum);
   }
-  // 备用RPC端点
-  return http('https://rpc.sepolia.org');
+  
+  // 本地开发使用本地RPC，否则使用Sepolia
+  const rpcUrl = isLocalDev 
+    ? 'http://127.0.0.1:8545' 
+    : 'https://rpc.sepolia.org';
+    
+  return http(rpcUrl);
 };
 
 export const publicClient = createPublicClient({ 
