@@ -1,5 +1,6 @@
 import './globals.css';
 import Providers from '../components/Providers';
+import { gsap } from "gsap";
 
 export const metadata = { 
   title: 'AI Proposal Assistant', 

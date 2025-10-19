@@ -1,21 +1,29 @@
 'use client';
 import Link from 'next/link';
 import ConnectWallet from '../components/ConnectWallet';
+import Poster from '../components/ui/poster/poster';
+import Spline from '@splinetool/react-spline/next';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
       {/* 背景动画效果 */}
+      {/* <Poster /> */}
+      <Spline
+      style={{position:'absolute'}}
+        scene="https://prod.spline.design/VdQuOpfgxweqc2gB/scene.splinecode" 
+      />
+
 
       
       {/* 动态背景粒子 */}
-      <div className="absolute inset-0">
+      {/* <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
         <div className="absolute top-40 right-20 w-1 h-1 bg-purple-400 rounded-full animate-ping"></div>
         <div className="absolute bottom-40 left-20 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce"></div>
         <div className="absolute top-60 right-40 w-1 h-1 bg-pink-400 rounded-full animate-pulse"></div>
         <div className="absolute bottom-60 right-10 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></div>
-      </div>
+      </div> */}
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
         {/* 顶部导航 */}
