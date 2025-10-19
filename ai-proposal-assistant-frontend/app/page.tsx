@@ -29,6 +29,12 @@ export default function HomePage() {
           交易仓位
         </Link>
         <Link 
+          href="/simple-open" 
+          className="px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-colors font-medium"
+        >
+          💰 简单开仓
+        </Link>
+        <Link 
           href="/proposals" 
           className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
         >

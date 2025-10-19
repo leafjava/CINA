@@ -46,22 +46,25 @@ if (!walletConnectProjectId) {
   console.warn('请访问 https://cloud.walletconnect.com/ 获取项目ID');
 }
 
-const chains = isLocalDev ? [localhost, sepolia, mainnet] : [sepolia, mainnet];
+const chains = isLocalDev 
+  ? ([localhost, sepolia, mainnet] as const)
+  : ([sepolia, mainnet] as const);
 
-// 构建连接器数组
-const connectors = [
-  injected(),
-  metaMask(),
-];
+// 构建连接器数组 - 根据配置决定是否包含WalletConnect
+const connectors = walletConnectProjectId && walletConnectProjectId !== 'your_walletconnect_project_id_here'
+  ? [
+      injected(),
+      metaMask(),
+      walletConnect({
+        projectId: walletConnectProjectId,
+      })
+    ]
+  : [
+      injected(),
+      metaMask(),
+    ];
 
-// 只有在有projectId时才添加WalletConnect连接器
-if (walletConnectProjectId && walletConnectProjectId !== 'your_walletconnect_project_id_here') {
-  connectors.push(
-    walletConnect({
-      projectId: walletConnectProjectId,
-    })
-  );
-} else {
+if (!walletConnectProjectId || walletConnectProjectId === 'your_walletconnect_project_id_here') {
   console.warn('WalletConnect连接器未启用，请配置有效的项目ID');
 }
 
