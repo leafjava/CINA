@@ -177,8 +177,25 @@ export async function ensureApprove(
     });
 
     console.log('授权交易已发送:', hash);
-    await publicClient.waitForTransactionReceipt({ hash });
-    console.log('授权交易已确认');
+    
+    // 在本地开发环境中，可以跳过等待确认以提高速度
+    if (isLocalDev) {
+      console.log('本地开发模式：跳过等待交易确认');
+      return;
+    }
+    
+    // 添加超时和错误处理
+    try {
+      const receipt = await publicClient.waitForTransactionReceipt({ 
+        hash,
+        timeout: 30000, // 30秒超时
+        confirmations: 1
+      });
+      console.log('授权交易已确认:', receipt.status);
+    } catch (error) {
+      console.warn('等待交易确认超时或失败:', error);
+      // 不抛出错误，继续执行
+    }
   } catch (error) {
     console.error('授权失败:', error);
     throw error;
@@ -339,11 +356,18 @@ export async function openLeveragePosition(params: LeverageOpenPositionParams): 
 // 5. watchTx - 等待回执
 export async function watchTx(hash: `0x${string}`): Promise<"success" | `revert:${string}`> {
   try {
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    console.log('等待交易确认:', hash);
+    const receipt = await publicClient.waitForTransactionReceipt({ 
+      hash,
+      timeout: 60000, // 60秒超时
+      confirmations: 1
+    });
+    console.log('交易确认状态:', receipt.status);
     return receipt.status === 'success' ? 'success' : (`revert:${receipt.transactionHash}` as const);
   } catch (error) {
     console.error('等待交易回执失败:', error);
-    throw error;
+    // 返回失败状态而不是抛出错误
+    return `revert:${hash}` as const;
   }
 }
 
