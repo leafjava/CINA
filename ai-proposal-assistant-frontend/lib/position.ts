@@ -227,17 +227,16 @@ export async function openLeveragePosition(params: LeverageOpenPositionParams): 
       abi: POSITION_FACET_ABI,
       functionName: 'openOrAddPositionFlashLoanV2',
       args: [
-        {
-          tokenIn: META.tokens.WRMB,        // 输入代币：WRMB
-          amountIn: params.wrmbAmount,       // WRMB数量
-          tokenOut: META.tokens.WBTC,        // 输出代币：WBTC
-          minAmountOut: params.minWbtcOut,   // 最小WBTC输出
-          swapTarget: '0x0000000000000000000000000000000000000000', // DEX路由地址
-          swapData: params.swapData ?? '0x'  // 交换数据
-        },
-        '0x0000000000000000000000000000000000000000', // pool address - WBTC池地址
-        0, // positionId - 新开仓为0
-        flashLoanAmount, // 闪电贷借入的WBTC数量
+        // 第一个参数是元组 (address tokenIn, uint256 amountIn, address tokenOut, bytes swapData)
+        [
+          META.tokens.WRMB,        // address tokenIn: WRMB
+          params.wrmbAmount,       // uint256 amountIn: WRMB数量
+          META.tokens.WBTC,        // address tokenOut: WBTC
+          params.swapData ?? '0x'  // bytes swapData: 交换数据
+        ] as const,
+        '0x0000000000000000000000000000000000000000' as `0x${string}`, // address pool - WBTC池地址
+        0n, // uint256 positionId - 新开仓为0
+        flashLoanAmount, // uint256 - 闪电贷借入的WBTC数量
         encodeAbiParameters([
           { type: 'bytes32' },
           { type: 'uint256' },
@@ -253,6 +252,7 @@ export async function openLeveragePosition(params: LeverageOpenPositionParams): 
     });
 
     const hash = await walletClient.sendTransaction({
+      account: params.user,
       to: META.diamond,
       data,
       value: 0n

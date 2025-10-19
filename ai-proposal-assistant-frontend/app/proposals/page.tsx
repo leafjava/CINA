@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8787';
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://sepolia.infura.io/v3/62c0ac4c3b2e4a809869158eeec667e8';
 const DAO = process.env.NEXT_PUBLIC_DAO_ADDRESS || '';
 
 export default function ProposalsPage() {
