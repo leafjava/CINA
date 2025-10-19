@@ -15,7 +15,7 @@ export default function HomePage() {
       
       <div className="space-y-8">
         {/* 导航区域 */}
-        <div className="flex justify-center space-x-4">
+        <div className="flex flex-wrap justify-center gap-4">
         <Link 
           href="/trading" 
           className="px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 transition-colors font-medium"
@@ -33,6 +33,12 @@ export default function HomePage() {
           className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
         >
           提案管理
+        </Link>
+        <Link 
+          href="/flashloan" 
+          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors font-medium"
+        >
+          ⚡ 闪电贷测试
         </Link>
       </div>
 
