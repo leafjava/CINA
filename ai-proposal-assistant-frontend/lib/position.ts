@@ -46,12 +46,20 @@ export function getMeta(): Meta {
 // 创建客户端
 export const publicClient = createPublicClient({ 
   chain: sepolia, 
-  transport: custom(typeof window !== 'undefined' ? window.ethereum! : undefined) 
+  transport: typeof window !== 'undefined' && window.ethereum 
+    ? custom(window.ethereum) 
+    : custom({
+        request: async () => { throw new Error('No ethereum provider'); }
+      } as any)
 });
 
 export const walletClient = createWalletClient({ 
   chain: sepolia, 
-  transport: custom(typeof window !== 'undefined' ? window.ethereum! : undefined) 
+  transport: typeof window !== 'undefined' && window.ethereum 
+    ? custom(window.ethereum)
+    : custom({
+        request: async () => { throw new Error('No ethereum provider'); }
+      } as any)
 });
 
 // ERC20 ABI
@@ -97,6 +105,7 @@ export async function ensureApprove(
     });
 
     const hash = await walletClient.sendTransaction({
+      account: owner,
       to: token,
       data,
       value: 0n
@@ -162,23 +171,22 @@ export async function openPositionFlashLoan(params: OpenPositionParams): Promise
       abi: POSITION_FACET_ABI,
       functionName: 'openOrAddPositionFlashLoanV2',
       args: [
-        // 这里需要根据CINA项目的实际参数结构进行调整
-        {
-          tokenIn: params.collateralToken,
-          amountIn: params.collateralAmount,
-          tokenOut: META.tokens.FXUSD,
-          minAmountOut: params.minMintFxUSD,
-          swapTarget: '0x0000000000000000000000000000000000000000',
-          swapData: params.dexSwapData ?? '0x'
-        },
-        '0x0000000000000000000000000000000000000000', // pool address - 需要从配置中获取
-        0, // positionId - 新开仓为0
-        params.collateralAmount,
-        '0x' // data
+        // 第一个参数是元组 (address tokenIn, uint256 amountIn, address tokenOut, bytes swapData)
+        [
+          params.collateralToken,
+          params.collateralAmount,
+          META.tokens.FXUSD,
+          params.dexSwapData ?? '0x'
+        ] as const,
+        '0x0000000000000000000000000000000000000000', // address pool - 需要从配置中获取
+        0n, // uint256 positionId - 新开仓为0
+        params.collateralAmount, // uint256
+        '0x' // bytes data
       ]
     });
 
     const hash = await walletClient.sendTransaction({
+      account: params.user,
       to: META.diamond,
       data,
       value: 0n
@@ -320,10 +328,15 @@ export async function getPositions(owner: `0x${string}`): Promise<Position[]> {
       const closedTokenIds = new Set(closedEvents.map(event => event.args.tokenId));
       const activePositions = openedEvents
         .filter(event => !closedTokenIds.has(event.args.tokenId))
+        .filter(event => 
+          event.args.tokenId !== undefined && 
+          event.args.collateralToken !== undefined && 
+          event.args.collateralAmount !== undefined
+        )
         .map(event => ({
-          id: event.args.tokenId,
-          collateralToken: event.args.collateralToken,
-          collateralAmount: event.args.collateralAmount,
+          id: event.args.tokenId!,
+          collateralToken: event.args.collateralToken!,
+          collateralAmount: event.args.collateralAmount!,
           debtAmount: 0n, // 需要从合约查询实际债务
           healthFactor: 0n // 需要从合约查询实际健康因子
         }));

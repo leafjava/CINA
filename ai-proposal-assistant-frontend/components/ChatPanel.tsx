@@ -20,28 +20,28 @@ function tryParseAction(text: string): ActionProtocol | null {
 
 export default function ChatPanel() {
   const [messages, setMessages] = useState<Msg[]>([
-    { role:'assistant', content:'你好，我可以把你的治理诉求转为“提案草稿”。直接描述你的目标即可～' }
+    { role:'assistant' as const, content:'你好，我可以把你的治理诉求转为"提案草稿"。直接描述你的目标即可～' }
   ]);
   const [input, setInput] = useState('建议将 Q2 预算的 30% 分配给市场增长');
   const setDraft = useDraftStore(s => s.setDraft);
 
   const send = async () => {
     if (!input.trim()) return;
-    const newMsgs = [...messages, { role:'user', content: input }];
+    const newMsgs: Msg[] = [...messages, { role:'user' as const, content: input }];
     setMessages(newMsgs);
     setInput('');
     try {
       const res = await fetch('/api/coze', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messages: newMsgs }) });
       const data = await res.json();
       const reply = data.reply || '（请在 .env.local 配置 COZE_*，当前为占位回显）';
-      setMessages(m => [...m, { role:'assistant', content: reply }]);
+      setMessages(m => [...m, { role:'assistant' as const, content: reply }]);
       const act = tryParseAction(reply);
       if (act?.type === 'proposal_draft') {
         const d = act.data as ProposalDraft;
         setDraft({ title: d.title, description: d.description, fundAmountWei: d.fundAmountWei, target: d.target, calldata: d.calldata, gasEstimate: d.gasEstimate });
       }
     } catch (e:any) {
-      setMessages(m => [...m, { role:'assistant', content: '调用 Coze 失败：' + e?.message }]);
+      setMessages(m => [...m, { role:'assistant' as const, content: '调用 Coze 失败：' + e?.message }]);
     }
   };
 

@@ -35,11 +35,20 @@ export default function TradingChart({ symbol }: TradingChartProps) {
       },
       rightPriceScale: {
         borderColor: '#2B3139',
+        scaleMargins: {
+          top: 0.1,
+          bottom: 0.1,
+        },
+      },
+      leftPriceScale: {
+        visible: false,
       },
       timeScale: {
         borderColor: '#2B3139',
         timeVisible: true,
         visible: false, // 隐藏主图的时间轴
+        rightOffset: 5,
+        barSpacing: 8,
       },
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
@@ -64,9 +73,14 @@ export default function TradingChart({ symbol }: TradingChartProps) {
           bottom: 0,
         },
       },
+      leftPriceScale: {
+        visible: false,
+      },
       timeScale: {
         borderColor: '#2B3139',
         timeVisible: true,
+        rightOffset: 5,
+        barSpacing: 8,
       },
       width: volumeChartContainerRef.current.clientWidth,
       height: volumeChartContainerRef.current.clientHeight,
@@ -95,20 +109,48 @@ export default function TradingChart({ symbol }: TradingChartProps) {
 
     volumeSeriesRef.current = volumeSeries;
 
+    // 根据合约获取基础价格
+    const getBasePrice = (symbol: string): number => {
+      const prices: { [key: string]: number } = {
+        'BTCUSDT': 106000,
+        'ETHUSDT': 3800,
+        'BNBUSDT': 680,
+        'SOLUSDT': 235,
+        'XRPUSDT': 2.8,
+        'ADAUSDT': 1.05,
+        'DOGEUSDT': 0.37,
+        'AVAXUSDT': 42,
+        'MATICUSDT': 0.51,
+        'DOTUSDT': 7.2,
+        'LINKUSDT': 23.5,
+        'UNIUSDT': 14.2,
+        'ATOMUSDT': 10,
+        'LTCUSDT': 107,
+        'ETCUSDT': 28.5,
+        'NEARUSDT': 5.4,
+        'APTUSDT': 12,
+        'ARBUSDT': 0.88,
+        'OPUSDT': 2.1,
+        'SUIUSDT': 4.2,
+      };
+      return prices[symbol] || 100;
+    };
+
     // 生成模拟数据
     const generateData = () => {
       const data = [];
       const volumeData = [];
-      let basePrice = 3800;
+      let basePrice = getBasePrice(symbol);
+      const priceRange = basePrice * 0.02; // 2% 波动范围
       const now = Math.floor(Date.now() / 1000);
       const interval = timeframe === '15m' ? 900 : timeframe === '1h' ? 3600 : 14400; // 4h default
 
       for (let i = 200; i >= 0; i--) {
         const time = (now - i * interval) as any;
-        const open = basePrice + (Math.random() - 0.5) * 50;
-        const close = open + (Math.random() - 0.5) * 80;
-        const high = Math.max(open, close) + Math.random() * 30;
-        const low = Math.min(open, close) - Math.random() * 30;
+        const open = basePrice + (Math.random() - 0.5) * priceRange;
+        const close = open + (Math.random() - 0.5) * priceRange * 1.5;
+        const high = Math.max(open, close) + Math.random() * priceRange * 0.5;
+        const low = Math.min(open, close) - Math.random() * priceRange * 0.5;
         const volume = Math.random() * 5000 + 1000;
 
         data.push({

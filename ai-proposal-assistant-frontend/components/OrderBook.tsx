@@ -12,21 +12,52 @@ interface Order {
   total: number;
 }
 
+// 不同合约的基础价格
+const getBasePrice = (symbol: string): number => {
+  const prices: { [key: string]: number } = {
+    'BTCUSDT': 106961.2,
+    'ETHUSDT': 3889.08,
+    'BNBUSDT': 689.45,
+    'SOLUSDT': 238.67,
+    'XRPUSDT': 2.84,
+    'ADAUSDT': 1.08,
+    'DOGEUSDT': 0.38,
+    'AVAXUSDT': 42.5,
+    'MATICUSDT': 0.52,
+    'DOTUSDT': 7.25,
+    'LINKUSDT': 23.8,
+    'UNIUSDT': 14.5,
+    'ATOMUSDT': 10.2,
+    'LTCUSDT': 108.5,
+    'ETCUSDT': 28.9,
+    'NEARUSDT': 5.45,
+    'APTUSDT': 12.3,
+    'ARBUSDT': 0.89,
+    'OPUSDT': 2.15,
+    'SUIUSDT': 4.28,
+  };
+  return prices[symbol] || 100;
+};
+
 export default function OrderBook({ symbol }: OrderBookProps) {
   const [asks, setAsks] = useState<Order[]>([]);
   const [bids, setBids] = useState<Order[]>([]);
-  const [currentPrice, setCurrentPrice] = useState(3889.08);
+  const [currentPrice, setCurrentPrice] = useState(() => getBasePrice(symbol));
 
   useEffect(() => {
+    // 重置价格
+    setCurrentPrice(getBasePrice(symbol));
+    
     // 生成模拟订单簿数据
     const generateOrders = () => {
       const newAsks: Order[] = [];
       const newBids: Order[] = [];
-      const basePrice = 3889.08;
+      const basePrice = getBasePrice(symbol);
+      const priceStep = basePrice > 1000 ? 0.1 : (basePrice > 100 ? 0.01 : 0.0001);
 
       // 生成卖单（asks）- 价格从高到低
       for (let i = 10; i >= 1; i--) {
-        const price = basePrice + i * 0.01;
+        const price = basePrice + i * priceStep;
         const amount = Math.random() * 50 + 5;
         const total = price * amount;
         newAsks.push({ price, amount, total });
@@ -34,7 +65,7 @@ export default function OrderBook({ symbol }: OrderBookProps) {
 
       // 生成买单（bids）- 价格从高到低
       for (let i = 0; i < 10; i++) {
-        const price = basePrice - i * 0.01;
+        const price = basePrice - i * priceStep;
         const amount = Math.random() * 50 + 5;
         const total = price * amount;
         newBids.push({ price, amount, total });
@@ -49,7 +80,11 @@ export default function OrderBook({ symbol }: OrderBookProps) {
     // 模拟实时更新
     const interval = setInterval(() => {
       generateOrders();
-      setCurrentPrice(prev => prev + (Math.random() - 0.5) * 0.5);
+      const currentBasePrice = getBasePrice(symbol);
+      const priceChange = currentBasePrice > 1000 ? (Math.random() - 0.5) * 5 : 
+                         currentBasePrice > 100 ? (Math.random() - 0.5) * 0.5 : 
+                         (Math.random() - 0.5) * 0.001;
+      setCurrentPrice(prev => prev + priceChange);
     }, 2000);
 
     return () => clearInterval(interval);
@@ -82,7 +117,9 @@ export default function OrderBook({ symbol }: OrderBookProps) {
         {/* 内容 */}
         <div className="relative flex items-center justify-between px-3 text-xs h-full">
           <span className={type === 'ask' ? 'text-red-400' : 'text-green-400'}>
-            {order.price.toFixed(2)}
+            {order.price > 1000 ? order.price.toFixed(1) : 
+             order.price > 1 ? order.price.toFixed(2) : 
+             order.price.toFixed(4)}
           </span>
           <span className="text-gray-300">
             {order.amount.toFixed(3)}
@@ -136,12 +173,16 @@ export default function OrderBook({ symbol }: OrderBookProps) {
         <div className="h-10 border-y border-[#2B3139] flex items-center justify-between px-3 bg-[#181A20]">
           <div className="flex items-center space-x-2">
             <span className="text-green-400 text-lg font-semibold">
-              {currentPrice.toFixed(2)}
+              {currentPrice > 1000 ? currentPrice.toFixed(1) : 
+               currentPrice > 1 ? currentPrice.toFixed(2) : 
+               currentPrice.toFixed(4)}
             </span>
             <span className="text-xs text-green-400">↑</span>
           </div>
           <span className="text-xs text-gray-400">
-            ${currentPrice.toFixed(2)}
+            ${currentPrice > 1000 ? currentPrice.toFixed(1) : 
+              currentPrice > 1 ? currentPrice.toFixed(2) : 
+              currentPrice.toFixed(4)}
           </span>
         </div>
 
