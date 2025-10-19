@@ -1,4 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
+require('dotenv').config();
+
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -26,6 +29,11 @@ module.exports = {
       accounts: {
         mnemonic: "test test test test test test test test test test test junk"
       }
+    },
+    sepolia: {
+      url: "https://eth-sepolia.g.alchemy.com/v2/x6iEy5VX8L8ETvkuMUlURcNmCbApACsy",
+      chainId: 11155111,
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : []
     }
   },
   paths: {
