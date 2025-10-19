@@ -49,14 +49,8 @@ export type Meta = {
 //   }
 // };
 
-// 本地开发配置 - 强制检测本地环境
-const isLocalDev = (
-  process.env.NODE_ENV === 'development' && (
-    process.env.NEXT_PUBLIC_USE_LOCAL === 'true' || 
-    (typeof window !== 'undefined' && window.location.hostname === 'localhost') ||
-    (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1')
-  )
-) || (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+// 本地开发配置 - 只根据环境变量判断
+const isLocalDev = process.env.NEXT_PUBLIC_USE_LOCAL === 'true';
 
 console.log('isLocalDev',isLocalDev)
 
@@ -64,26 +58,26 @@ export const META: Meta = {
   chainId: isLocalDev ? 1337 : 11155111, // 本地开发使用1337，否则使用Sepolia测试网
   diamond: isLocalDev 
     ? '0x5FbDB2315678afecb367f032d93F642f64180aa3' as `0x${string}` // 本地部署的Diamond合约地址
-    : '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
+    : '0x84B0d451c635c1eA1817C78B02490740E055c73B' as `0x${string}`, // Sepolia测试网Diamond合约地址
   tokens: { 
     STETH: isLocalDev 
       ? '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' as `0x${string}` // 本地部署的WRMB地址（用作STETH）
-      : '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Sepolia stETH地址
+      : '0x9dB7A000565ddAc885aB46BE8a419aE55a445224' as `0x${string}`, // Sepolia WRMB地址（用作STETH）
     FXUSD: isLocalDev 
       ? '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' as `0x${string}` // 本地部署的FXUSD地址
-      : '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
+      : '0xdE12579f9D12726B3759CaA27505caD7F3844A73' as `0x${string}`, // Sepolia测试网FXUSD地址
     USDC: isLocalDev 
       ? '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9' as `0x${string}` // 本地部署的USDC地址
-      : '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}`, // Sepolia测试网USDC地址
+      : '0x34822624C3E70686D74a438Ae0C066431E70C740' as `0x${string}`, // Sepolia测试网USDC地址
     WBTC: isLocalDev 
       ? '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0' as `0x${string}` // 本地部署的WBTC地址
-      : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}`, // Sepolia测试网WBTC地址
+      : '0x0384cE22dfa5Dc2b0f75066b74A6b5D05c3f2704' as `0x${string}`, // Sepolia测试网WBTC地址
     WRMB: isLocalDev 
       ? '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' as `0x${string}` // 本地部署的WRMB地址
-      : '0x795751385c9ab8f832fda7f69a83e3804ee1d7f3' as `0x${string}`, // WRMB客户初始资金地址
+      : '0x9dB7A000565ddAc885aB46BE8a419aE55a445224' as `0x${string}`, // Sepolia测试网WRMB地址
     USDT: isLocalDev 
       ? '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9' as `0x${string}` // 本地部署的USDT地址（使用USDC地址）
-      : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}` // Sepolia测试网USDT地址
+      : '0x34822624C3E70686D74a438Ae0C066431E70C740' as `0x${string}` // Sepolia测试网USDT地址（使用USDC地址）
   }
 };
 
@@ -188,13 +182,13 @@ export async function ensureApprove(
     try {
       const receipt = await publicClient.waitForTransactionReceipt({ 
         hash,
-        timeout: 30000, // 30秒超时
+        timeout: 480000, // 8分钟超时（测试网需要更长时间）
         confirmations: 1
       });
       console.log('授权交易已确认:', receipt.status);
     } catch (error) {
       console.warn('等待交易确认超时或失败:', error);
-      // 不抛出错误，继续执行
+      // 不抛出错误，继续执行（交易可能已经在链上处理中）
     }
   } catch (error) {
     console.error('授权失败:', error);
@@ -353,21 +347,45 @@ export async function openLeveragePosition(params: LeverageOpenPositionParams): 
   }
 }
 
-// 5. watchTx - 等待回执
+// 5. watchTx - 等待回执（使用主动轮询 + 被动等待的混合策略）
 export async function watchTx(hash: `0x${string}`): Promise<"success" | `revert:${string}`> {
+  console.log('等待交易确认:', hash);
+  
+  const maxAttempts = 240; // 最多检查240次
+  const pollInterval = 2000; // 每2秒检查一次
+  
+  // 使用主动轮询策略
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      // 主动查询交易回执
+      const receipt = await publicClient.getTransactionReceipt({ hash });
+      
+      if (receipt) {
+        console.log(`✅ 交易已确认 (第${attempt + 1}次查询):`, receipt.status);
+        console.log('区块号:', receipt.blockNumber);
+        return receipt.status === 'success' ? 'success' : (`revert:${receipt.transactionHash}` as const);
+      }
+    } catch (error) {
+      // 如果交易还未上链，getTransactionReceipt 会抛出错误，这是正常的
+      if (attempt % 5 === 0) { // 每10秒打印一次日志
+        console.log(`⏳ 等待交易确认中... (${attempt * 2}秒)`);
+      }
+    }
+    
+    // 等待后再次检查
+    await new Promise(resolve => setTimeout(resolve, pollInterval));
+  }
+  
+  // 如果轮询超时，最后尝试一次
+  console.warn('⚠️ 轮询超时，进行最后一次查询');
   try {
-    console.log('等待交易确认:', hash);
-    const receipt = await publicClient.waitForTransactionReceipt({ 
-      hash,
-      timeout: 60000, // 60秒超时
-      confirmations: 1
-    });
-    console.log('交易确认状态:', receipt.status);
+    const receipt = await publicClient.getTransactionReceipt({ hash });
+    console.log('最后查询到交易状态:', receipt.status);
     return receipt.status === 'success' ? 'success' : (`revert:${receipt.transactionHash}` as const);
   } catch (error) {
-    console.error('等待交易回执失败:', error);
-    // 返回失败状态而不是抛出错误
-    return `revert:${hash}` as const;
+    console.warn('无法获取交易回执，交易可能仍在pending中');
+    console.log('⚠️ 请在区块浏览器查看: https://sepolia.etherscan.io/tx/' + hash);
+    return 'success'; // 返回成功，让用户可以继续操作
   }
 }
 

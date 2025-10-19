@@ -51,24 +51,30 @@ const chains: readonly [Chain, ...Chain[]] = isLocalDev
   ? [localhost, sepolia, mainnet] 
   : [sepolia, mainnet];
 
-// 构建连接器数组
-const connectors = [
-  injected(),
-  metaMask(),
-];
+// 构建连接器数组 - 只在客户端添加 WalletConnect
+const getConnectors = () => {
+  const baseConnectors = [
+    injected(),
+    metaMask(),
+  ];
+  
+  // 只在客户端环境且有有效的 projectId 时添加 WalletConnect
+  if (typeof window !== 'undefined' && walletConnectProjectId && walletConnectProjectId !== 'your_walletconnect_project_id_here') {
+    baseConnectors.push(
+      // @ts-ignore - WalletConnect 连接器类型暂时不兼容 wagmi v2，但运行时正常
+      walletConnect({
+        projectId: walletConnectProjectId,
+        showQrModal: true,
+      })
+    );
+  } else if (typeof window !== 'undefined') {
+    console.warn('WalletConnect连接器未启用，请配置有效的项目ID');
+  }
+  
+  return baseConnectors;
+};
 
-// 只有在有projectId时才添加WalletConnect连接器
-if (walletConnectProjectId && walletConnectProjectId !== 'your_walletconnect_project_id_here') {
-  connectors.push(
-    // @ts-ignore - WalletConnect 连接器类型暂时不兼容 wagmi v2，但运行时正常
-    walletConnect({
-      projectId: walletConnectProjectId,
-      showQrModal: true,
-    })
-  );
-} else {
-  console.warn('WalletConnect连接器未启用，请配置有效的项目ID');
-}
+const connectors = getConnectors();
 
 export const wagmiConfig = createConfig({
   chains,

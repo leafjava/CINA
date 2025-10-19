@@ -112,7 +112,7 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
     setStatus(`交易已发送: ${txHash}`);
 
     // 6. 等待确认
-    setStatus('等待交易确认...');
+    setStatus('等待交易确认（测试网可能需要1-8分钟）...');
     const result = await watchTx(txHash);
 
     if (result === 'success') {
@@ -123,9 +123,9 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
       const positions = await getPositions(address);
       
       onSuccess?.(positions);
-      setStatus(`一步到位杠杆开仓成功！交易哈希: ${txHash}`);
+      setStatus(`一步到位杠杆开仓成功！交易哈希: ${txHash}\n查看交易: https://sepolia.etherscan.io/tx/${txHash}`);
     } else {
-      throw new Error(`交易失败: ${result}`);
+      throw new Error(`交易失败: ${result}\n查看详情: https://sepolia.etherscan.io/tx/${txHash}`);
     }
   };
 
