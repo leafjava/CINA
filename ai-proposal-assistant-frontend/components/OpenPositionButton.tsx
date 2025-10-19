@@ -211,7 +211,7 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
               className="mr-2"
               disabled={isLoading}
             />
-            一步到位杠杆开仓 (WRMB → WBTC)
+            <span className="text-black">一步到位杠杆开仓 (WRMB → WBTC)</span>
           </label>
           <label className="flex items-center">
             <input
@@ -222,7 +222,7 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
               className="mr-2"
               disabled={isLoading}
             />
-            传统开仓 (stETH抵押)
+            <span className="text-black">传统开仓 (stETH抵押)</span>
           </label>
         </div>
       </div>
