@@ -1,10 +1,10 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import TradingChart from '@/components/TradingChart';
 import OrderBook from '@/components/OrderBook';
 import TradingPanel from '@/components/TradingPanel';
+import AccountInfo from '@/components/AccountInfo';
+import { PriceProvider } from '@/contexts/PriceContext';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -38,26 +38,26 @@ export default function TradingPage() {
   const [showSymbolSelector, setShowSymbolSelector] = useState(false);
 
   return (
-    <div className="h-screen bg-[#0B0E11] text-white flex flex-col overflow-hidden">
-      {/* 顶部导航栏 */}
-      <div className="h-14 bg-[#181A20] border-b border-[#2B3139] flex items-center px-2 md:px-4 flex-shrink-0">
+    <div className="h-screen bg-[#0A0B0D] text-white flex flex-col overflow-hidden">
+      {/* 顶部导航栏 - AsterDEX 风格 */}
+      <div className="h-14 bg-[#0E1013] border-b border-[#1E2329] flex items-center px-2 md:px-4 flex-shrink-0">
         <div className="flex items-center space-x-2 md:space-x-6">
           <button 
             onClick={() => setShowSymbolSelector(true)}
-            className="flex items-center space-x-2 hover:bg-[#2B3139] px-2 py-1 rounded transition-colors"
+            className="flex items-center space-x-2 hover:bg-[#1E2329] px-2 py-1 rounded transition-colors"
           >
             <div className="flex items-center space-x-1">
               <span className="font-semibold text-base md:text-lg">{symbol}</span>
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </div>
-            <span className="bg-yellow-500/20 text-yellow-500 text-xs px-2 py-0.5 rounded hidden md:inline">永续合约</span>
+            <span className="bg-[#14B8A6]/20 text-[#14B8A6] text-xs px-2 py-0.5 rounded hidden md:inline">永续合约</span>
           </button>
           
           <div className="hidden md:flex items-center space-x-6 text-sm">
             <div>
-              <div className="text-gray-400 text-xs">标记价格</div>
+              <div className="text-gray-500 text-xs">标记价格</div>
               <div className="text-white font-medium">
                 {symbol === 'BTCUSDT' ? '106,961.2' :
                  symbol === 'ETHUSDT' ? '3,888.56' :
@@ -66,9 +66,9 @@ export default function TradingPage() {
                  symbol === 'XRPUSDT' ? '2.8412' : '---'}
               </div>
             </div>
-            <div className="h-8 w-px bg-[#2B3139]"></div>
+            <div className="h-8 w-px bg-[#1E2329]"></div>
             <div>
-              <div className="text-gray-400 text-xs">指数价格</div>
+              <div className="text-gray-500 text-xs">指数价格</div>
               <div className="text-white font-medium">
                 {symbol === 'BTCUSDT' ? '106,972.0' :
                  symbol === 'ETHUSDT' ? '3,888.11' :
@@ -77,14 +77,14 @@ export default function TradingPage() {
                  symbol === 'XRPUSDT' ? '2.8401' : '---'}
               </div>
             </div>
-            <div className="h-8 w-px bg-[#2B3139]"></div>
+            <div className="h-8 w-px bg-[#1E2329]"></div>
             <div>
-              <div className="text-gray-400 text-xs">24h涨跌</div>
-              <div className="text-green-500 font-medium">+2.58%</div>
+              <div className="text-gray-500 text-xs">24h涨跌</div>
+              <div className="text-[#14B8A6] font-medium">+2.58%</div>
             </div>
-            <div className="h-8 w-px bg-[#2B3139]"></div>
+            <div className="h-8 w-px bg-[#1E2329]"></div>
             <div>
-              <div className="text-gray-400 text-xs">24h最高</div>
+              <div className="text-gray-500 text-xs">24h最高</div>
               <div className="text-white font-medium">
                 {symbol === 'BTCUSDT' ? '107,030.9' :
                  symbol === 'ETHUSDT' ? '3,926.00' :
@@ -93,9 +93,9 @@ export default function TradingPage() {
                  symbol === 'XRPUSDT' ? '2.8956' : '---'}
               </div>
             </div>
-            <div className="h-8 w-px bg-[#2B3139]"></div>
+            <div className="h-8 w-px bg-[#1E2329]"></div>
             <div>
-              <div className="text-gray-400 text-xs">24h最低</div>
+              <div className="text-gray-500 text-xs">24h最低</div>
               <div className="text-white font-medium">
                 {symbol === 'BTCUSDT' ? '104,250.5' :
                  symbol === 'ETHUSDT' ? '3,712.51' :
@@ -104,9 +104,9 @@ export default function TradingPage() {
                  symbol === 'XRPUSDT' ? '2.7234' : '---'}
               </div>
             </div>
-            <div className="h-8 w-px bg-[#2B3139]"></div>
+            <div className="h-8 w-px bg-[#1E2329]"></div>
             <div>
-              <div className="text-gray-400 text-xs">24h成交量</div>
+              <div className="text-gray-500 text-xs">24h成交量</div>
               <div className="text-white font-medium">
                 {symbol === 'BTCUSDT' ? '12.21B' :
                  symbol === 'ETHUSDT' ? '3.93M' :
@@ -120,11 +120,11 @@ export default function TradingPage() {
           {/* 移动端显示 */}
           <div className="md:hidden flex items-center space-x-3 text-xs ml-auto">
             <div>
-              <div className="text-green-500 font-medium">+2.58%</div>
+              <div className="text-[#14B8A6] font-medium">+2.58%</div>
             </div>
             <button 
               onClick={() => router.push(`/chart?symbol=${symbol}`)}
-              className="p-2 hover:bg-[#2B3139] rounded"
+              className="p-2 hover:bg-[#1E2329] rounded"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -134,39 +134,38 @@ export default function TradingPage() {
         </div>
       </div>
 
-      {/* 主要内容区域 */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* 左侧：K线图（桌面端显示） */}
-        <div className="hidden md:flex flex-1 flex-col min-w-0">
-          <TradingChart symbol={symbol} />
-        </div>
+      {/* 主要内容区域 - 三列布局 */}
+      <PriceProvider symbol={symbol}>
+        <div className="flex-1 flex overflow-hidden min-h-0">
+          {/* 左列：K线图 + 交易量（桌面端显示） */}
+          <div className="hidden md:flex flex-1 flex-col min-w-0">
+            <TradingChart symbol={symbol} />
+          </div>
 
-        {/* 右侧：订单簿 + 交易面板（桌面端） */}
-        <div className="hidden md:flex w-[380px] flex-col border-l border-[#2B3139] flex-shrink-0">
-          {/* 订单簿 */}
-          <div className="h-[50%] border-b border-[#2B3139] min-h-0">
+          {/* 中间列：订单簿（桌面端显示） */}
+          <div className="hidden md:flex w-[300px] flex-col border-l border-[#1E2329] flex-shrink-0">
             <OrderBook symbol={symbol} />
           </div>
 
-          {/* 交易面板 */}
-          <div className="h-[50%] min-h-0">
-            <TradingPanel 
-              symbol={symbol} 
-              leverage={leverage}
-              onLeverageChange={setLeverage}
-            />
+          {/* 右列：交易面板 + 账户信息（桌面端） */}
+          <div className="hidden md:flex w-[380px] flex-col border-l border-[#1E2329] flex-shrink-0">
+            {/* 交易面板（开仓按钮等） */}
+            <div className="h-[60%] border-b border-[#1E2329] min-h-0 overflow-y-auto">
+              <TradingPanel 
+                symbol={symbol} 
+                leverage={leverage}
+                onLeverageChange={setLeverage}
+              />
+            </div>
+
+            {/* 账户信息 */}
+            <div className="h-[40%] min-h-0">
+              <AccountInfo />
+            </div>
           </div>
-        </div>
         
-        {/* 移动端：订单簿 + 交易面板 */}
-        <div className="md:hidden flex-1 flex flex-col min-h-0">
-          {/* 订单簿 */}
-          <div className="h-[35%] border-b border-[#2B3139] min-h-0">
-            <OrderBook symbol={symbol} />
-          </div>
-          
-          {/* 交易面板 */}
-          <div className="flex-1 min-h-0">
+          {/* 移动端：交易面板 */}
+          <div className="md:hidden flex-1 flex flex-col min-h-0">
             <TradingPanel 
               symbol={symbol} 
               leverage={leverage}
@@ -175,18 +174,18 @@ export default function TradingPage() {
             />
           </div>
         </div>
-      </div>
+      </PriceProvider>
 
-      {/* 合约选择模态框 */}
+      {/* 合约选择模态框 - AsterDEX 风格 */}
       {showSymbolSelector && (
-        <div className="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-50">
-          <div className="bg-[#181A20] rounded-t-2xl md:rounded-lg w-full md:w-[500px] max-h-[70vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/80 flex items-end md:items-center justify-center z-50">
+          <div className="bg-[#0E1013] rounded-t-2xl md:rounded-lg w-full md:w-[500px] max-h-[70vh] flex flex-col">
             {/* 头部 */}
-            <div className="flex items-center justify-between p-4 border-b border-[#2B3139]">
+            <div className="flex items-center justify-between p-4 border-b border-[#1E2329]">
               <h3 className="text-lg font-medium">选择合约</h3>
               <button
                 onClick={() => setShowSymbolSelector(false)}
-                className="p-2 hover:bg-[#2B3139] rounded-full transition-colors"
+                className="p-2 hover:bg-[#1E2329] rounded-full transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -203,8 +202,8 @@ export default function TradingPage() {
                     setSymbol(item.symbol);
                     setShowSymbolSelector(false);
                   }}
-                  className={`w-full flex items-center justify-between p-4 hover:bg-[#2B3139] transition-colors ${
-                    symbol === item.symbol ? 'bg-[#2B3139]' : ''
+                  className={`w-full flex items-center justify-between p-4 hover:bg-[#1E2329] transition-colors ${
+                    symbol === item.symbol ? 'bg-[#1E2329]' : ''
                   }`}
                 >
                   <div className="flex items-center space-x-3">
@@ -214,7 +213,7 @@ export default function TradingPage() {
                     </div>
                   </div>
                   {symbol === item.symbol && (
-                    <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-[#14B8A6]" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   )}
@@ -223,7 +222,7 @@ export default function TradingPage() {
             </div>
 
             {/* 底部说明 */}
-            <div className="p-4 border-t border-[#2B3139] bg-[#0B0E11]">
+            <div className="p-4 border-t border-[#1E2329] bg-[#0A0B0D]">
               <p className="text-xs text-gray-400 text-center">
                 支持更多合约交易对，实时价格更新
               </p>

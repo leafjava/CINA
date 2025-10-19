@@ -1,7 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import OpenPositionButton from '@/components/OpenPositionButton';

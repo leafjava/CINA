@@ -1,9 +1,8 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useRouter, useSearchParams } from 'next/navigation';
 import TradingChart from '@/components/TradingChart';
+import { PriceProvider } from '@/contexts/PriceContext';
 import { useState, useEffect, Suspense } from 'react';
 
 const AVAILABLE_SYMBOLS = [
@@ -42,46 +41,48 @@ function ChartContent() {
   }, [searchParams]);
 
   return (
-    <div className="h-screen bg-[#0B0E11] text-white flex flex-col overflow-hidden">
-      {/* 顶部导航栏 */}
-      <div className="h-14 bg-[#181A20] border-b border-[#2B3139] flex items-center px-4 flex-shrink-0">
-        <button 
-          onClick={() => router.back()}
-          className="p-2 hover:bg-[#2B3139] rounded-lg mr-4"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        
-        <div className="flex items-center space-x-2">
-          <span className="font-semibold text-lg">{symbol}</span>
-          <span className="bg-yellow-500/20 text-yellow-500 text-xs px-2 py-0.5 rounded">永续合约</span>
-        </div>
-        
-        <div className="ml-auto flex items-center space-x-4 text-sm">
-          <div>
-            <div className="text-gray-400 text-xs">标记价格</div>
-            <div className="text-white font-medium">
-              {symbol === 'BTCUSDT' ? '106,961.2' :
-               symbol === 'ETHUSDT' ? '3,888.56' :
-               symbol === 'BNBUSDT' ? '689.45' :
-               symbol === 'SOLUSDT' ? '238.67' :
-               symbol === 'XRPUSDT' ? '2.8412' : '---'}
+    <PriceProvider symbol={symbol}>
+      <div className="h-screen bg-[#0B0E11] text-white flex flex-col overflow-hidden">
+        {/* 顶部导航栏 */}
+        <div className="h-14 bg-[#0E1013] border-b border-[#1E2329] flex items-center px-4 flex-shrink-0">
+          <button 
+            onClick={() => router.back()}
+            className="p-2 hover:bg-[#1E2329] rounded-lg mr-4 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
+          <div className="flex items-center space-x-2">
+            <span className="font-semibold text-lg">{symbol}</span>
+            <span className="bg-[#14B8A6]/20 text-[#14B8A6] text-xs px-2 py-0.5 rounded">永续合约</span>
+          </div>
+          
+          <div className="ml-auto flex items-center space-x-4 text-sm">
+            <div>
+              <div className="text-gray-500 text-xs">标记价格</div>
+              <div className="text-white font-medium">
+                {symbol === 'BTCUSDT' ? '106,961.2' :
+                 symbol === 'ETHUSDT' ? '3,888.56' :
+                 symbol === 'BNBUSDT' ? '689.45' :
+                 symbol === 'SOLUSDT' ? '238.67' :
+                 symbol === 'XRPUSDT' ? '2.8412' : '---'}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-500 text-xs">24h涨跌</div>
+              <div className="text-[#14B8A6] font-medium">+2.58%</div>
             </div>
           </div>
-          <div>
-            <div className="text-gray-400 text-xs">24h涨跌</div>
-            <div className="text-green-500 font-medium">+2.58%</div>
-          </div>
+        </div>
+
+        {/* 全屏K线图 */}
+        <div className="flex-1 min-h-0">
+          <TradingChart symbol={symbol} />
         </div>
       </div>
-
-      {/* 全屏K线图 */}
-      <div className="flex-1 min-h-0">
-        <TradingChart symbol={symbol} />
-      </div>
-    </div>
+    </PriceProvider>
   );
 }
 
