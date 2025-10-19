@@ -3,7 +3,7 @@ const hre = require("hardhat");
 async function main() {
   console.log("🧹 清空仓位...");
   
-  const diamondAddress = "0x82e01223d51Eb87e16A03E24687EDF0F294da6f1";
+  const diamondAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
   
   try {
     // 获取合约实例
