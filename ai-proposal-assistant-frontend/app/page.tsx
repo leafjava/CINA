@@ -6,6 +6,7 @@ import Spline from '@splinetool/react-spline/next';
 // import PartnersSection from '../components/PartnersSection';
 import LogoMarquee from '../components/logoMarquee';
 
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -180,7 +181,7 @@ export default function HomePage() {
       <div className='logoMarquee' style={{position: 'absolute',bottom: '60px',left: '53%',transform: 'translate(-50%)'}}>
         <LogoMarquee />
       </div>
-
+      
     </div>
   );
 }

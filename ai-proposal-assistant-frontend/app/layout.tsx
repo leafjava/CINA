@@ -1,6 +1,7 @@
 import './globals.css';
 import Providers from '../components/Providers';
 import { gsap } from "gsap";
+import Footer from '../components/footer';
 
 export const metadata = { 
   title: 'CINA交易所', 
@@ -18,6 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           {children}
         </Providers>
+        <div className='foot'>
+          <Footer/>
+        </div>
       </body>
     </html>
   );
