@@ -11,18 +11,23 @@ contract MockDiamond is Ownable {
     
     uint256 private nextPositionId = 1;
     
+    // 定义交换参数结构体
+    struct SwapParams {
+        address tokenIn;
+        uint256 amountIn;
+        address tokenOut;
+        bytes swapData;
+    }
+    
     constructor() Ownable(msg.sender) {}
     mapping(uint256 => address) public positionOwners;
     mapping(uint256 => address) public positionCollateralTokens;
     mapping(uint256 => uint256) public positionCollateralAmounts;
     mapping(uint256 => uint256) public positionDebtAmounts;
     
-    // 模拟开仓函数
+    // 模拟开仓函数 - 匹配前端期望的签名
     function openOrAddPositionFlashLoanV2(
-        address tokenIn,
-        uint256 amountIn,
-        address tokenOut,
-        bytes calldata swapData,
+        SwapParams calldata swapParams,
         address pool,
         uint256 positionId,
         uint256 amount,
@@ -31,11 +36,11 @@ contract MockDiamond is Ownable {
         // 模拟开仓逻辑
         uint256 newPositionId = nextPositionId++;
         positionOwners[newPositionId] = msg.sender;
-        positionCollateralTokens[newPositionId] = tokenIn;
-        positionCollateralAmounts[newPositionId] = amountIn;
-        positionDebtAmounts[newPositionId] = amountIn * 2; // 模拟2倍杠杆
+        positionCollateralTokens[newPositionId] = swapParams.tokenIn;
+        positionCollateralAmounts[newPositionId] = swapParams.amountIn;
+        positionDebtAmounts[newPositionId] = swapParams.amountIn * 2; // 模拟2倍杠杆
         
-        emit PositionOpened(newPositionId, msg.sender, tokenIn, amountIn);
+        emit PositionOpened(newPositionId, msg.sender, swapParams.tokenIn, swapParams.amountIn);
     }
     
     // 模拟平仓函数
@@ -65,6 +70,11 @@ contract MockDiamond is Ownable {
     // 获取下一个仓位ID
     function getNextPositionId() external view returns (uint32) {
         return uint32(nextPositionId);
+    }
+    
+    // 添加一个简单的测试函数
+    function testFunction() external pure returns (string memory) {
+        return "MockDiamond is working!";
     }
 }
 

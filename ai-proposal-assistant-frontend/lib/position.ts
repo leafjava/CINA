@@ -63,26 +63,26 @@ console.log('isLocalDev',isLocalDev)
 export const META: Meta = {
   chainId: isLocalDev ? 1337 : 11155111, // 本地开发使用1337，否则使用Sepolia测试网
   diamond: isLocalDev 
-    ? '0x5FbDB2315678afecb367f032d93F642f64180aa3' as `0x${string}` // 本地部署的Diamond合约地址
+    ? '0x09635F643e140090A9A8Dcd712eD6285858ceBef' as `0x${string}` // 本地部署的Diamond合约地址
     : '0x2F1Cdbad93806040c353Cc87a5a48142348B6AfD' as `0x${string}`, // Sepolia测试网Diamond合约地址
   tokens: { 
     STETH: isLocalDev 
-      ? '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' as `0x${string}` // 本地部署的WRMB地址（用作STETH）
+      ? '0xc5a5C42992dECbae36851359345FE25997F5C42d' as `0x${string}` // 本地部署的WRMB地址（用作STETH）
       : '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' as `0x${string}`, // Sepolia stETH地址
     FXUSD: isLocalDev 
-      ? '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' as `0x${string}` // 本地部署的FXUSD地址
+      ? '0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E' as `0x${string}` // 本地部署的FXUSD地址
       : '0x085a1b6da46ae375b35dea9920a276ef571e209c' as `0x${string}`, // Sepolia测试网FXUSD地址
     USDC: isLocalDev 
-      ? '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9' as `0x${string}` // 本地部署的USDC地址
+      ? '0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690' as `0x${string}` // 本地部署的USDC地址
       : '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}`, // Sepolia测试网USDC地址
     WBTC: isLocalDev 
-      ? '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0' as `0x${string}` // 本地部署的WBTC地址
+      ? '0x67d269191c92Caf3cD7723F116c85e6E9bf55933' as `0x${string}` // 本地部署的WBTC地址
       : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}`, // Sepolia测试网WBTC地址
     WRMB: isLocalDev 
-      ? '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' as `0x${string}` // 本地部署的WRMB地址
+      ? '0xc5a5C42992dECbae36851359345FE25997F5C42d' as `0x${string}` // 本地部署的WRMB地址
       : '0x795751385c9ab8f832fda7f69a83e3804ee1d7f3' as `0x${string}`, // WRMB客户初始资金地址
     USDT: isLocalDev 
-      ? '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9' as `0x${string}` // 本地部署的USDT地址（使用USDC地址）
+      ? '0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690' as `0x${string}` // 本地部署的USDT地址（使用USDC地址）
       : '0x29f2D40B0605204364af54EC677bD022dA425d03' as `0x${string}` // Sepolia测试网USDT地址
   }
 };
@@ -202,14 +202,14 @@ export async function ensureApprove(
   }
 }
 
-// Position Facet ABI - 基于CINA项目的实际接口
+// Position Facet ABI - 匹配MockDiamond合约
 export const POSITION_FACET_ABI = parseAbi([
   'function openOrAddPositionFlashLoanV2((address,uint256,address,bytes),address,uint256,uint256,bytes)',
-  'function closeOrRemovePositionFlashLoanV2((address,uint256,address,bytes),uint256,address,uint256,uint256,bytes)',
-  // 注意：CINA项目中没有直接的getPositions函数，需要通过Pool合约查询
-  'function getPosition(uint256 tokenId) view returns (uint256 rawColls, uint256 rawDebts)',
-  'function getPositionDebtRatio(uint256 tokenId) view returns (uint256 debtRatio)',
+  'function closeOrRemovePositionFlashLoanV2(address,uint256,address,uint256,address,bytes)',
+  'function getPosition(uint256 tokenId) view returns (uint256 collateralAmount, uint256 debtAmount)',
+  'function getPositionDebtRatio(uint256 tokenId) view returns (uint256)',
   'function getNextPositionId() view returns (uint32)',
+  'function testFunction() view returns (string)',
   // 添加事件查询支持
   'event PositionOpened(uint256 indexed tokenId, address indexed owner, address collateralToken, uint256 collateralAmount)',
   'event PositionClosed(uint256 indexed tokenId, address indexed owner)'
