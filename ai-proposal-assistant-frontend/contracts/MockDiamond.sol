@@ -10,6 +10,8 @@ contract MockDiamond is Ownable {
     event PositionClosed(uint256 indexed tokenId, address indexed owner);
     
     uint256 private nextPositionId = 1;
+    
+    constructor() Ownable(msg.sender) {}
     mapping(uint256 => address) public positionOwners;
     mapping(uint256 => address) public positionCollateralTokens;
     mapping(uint256 => uint256) public positionCollateralAmounts;
