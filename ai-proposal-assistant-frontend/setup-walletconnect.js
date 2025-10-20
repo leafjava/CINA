@@ -82,3 +82,4 @@ console.log('- 查看 WALLETCONNECT_COMPLETE_GUIDE.md 获取完整指南');
 console.log('- 查看 WALLETCONNECT_SETUP.md 获取快速设置说明');
 
 console.log('\n✨ 配置完成后，你的应用将支持移动钱包连接！');
+
