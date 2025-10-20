@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
 import { 
@@ -11,6 +11,7 @@ import {
   watchTx, 
   getPositions,
   getTokenBalance,
+  updatePositionCacheAfterOpen,
   type OpenPositionParams,
   type LeverageOpenPositionParams,
   type Position
@@ -32,7 +33,7 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
   
   // 新增：一步到位杠杆开仓状态
   const [wrmbAmount, setWrmbAmount] = useState('1000.0'); // 默认1000 WRMB
-  const [wbtcAmount, setWbtcAmount] = useState('0.1'); // 默认0.1 WBTC
+  const [wbtcAmount, setWbtcAmount] = useState('0.1'); // 由公式动态计算
   const [tradingMode, setTradingMode] = useState<'traditional' | 'leverage'>('leverage'); // 交易模式
 
   const handleOpenPosition = async () => {
@@ -91,7 +92,19 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
 
     // 3. 计算参数
     const leverageMultiplier = parseFloat(leverage);
-    const wbtcAmountWei = parseEther(wbtcAmount);
+
+    // 使用最新输入动态计算目标WBTC数量: wbtcAmount = (wrmbAmount / 790000) * leverage
+    const computedWbtcAmount = (() => {
+      const wrmb = parseFloat(wrmbAmount || '0');
+      const lev = parseFloat(leverage || '0');
+      if (!isFinite(wrmb) || !isFinite(lev)) return '0';
+      const result = (wrmb / 790000) * lev;
+      return result.toFixed(6);
+    })();
+    // 同步状态，确保UI与交易参数一致
+    setWbtcAmount(computedWbtcAmount);
+
+    const wbtcAmountWei = parseEther(computedWbtcAmount);
     const minFxUSDMint = wbtcAmountWei * BigInt(Math.floor(leverageMultiplier * 10000)) / 10000n;
     const minWbtcOut = wbtcAmountWei * 95n / 100n; // 5%滑点保护
 
@@ -118,6 +131,28 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
     if (result === 'success') {
       setStatus('一步到位杠杆开仓成功！');
       
+      // 开仓成功后，尝试更新缓存
+      try {
+        // 这里需要根据实际的事件日志来解析仓位ID
+        // 暂时使用一个模拟的仓位ID，实际应该从交易收据中解析
+        const mockPositionId = BigInt(Date.now()); // 临时使用时间戳作为仓位ID
+        
+        // 更新缓存
+        updatePositionCacheAfterOpen(
+          address,
+          mockPositionId,
+          meta.tokens.WBTC, // 抵押物代币
+          parseEther(computedWbtcAmount), // 抵押物数量（动态计算）
+          0n, // 债务数量（暂时设为0）
+          0n,  // 健康因子（暂时设为0）
+          parseFloat(leverage)
+        );
+        
+        console.log('已更新仓位缓存');
+      } catch (cacheError) {
+        console.warn('更新缓存失败:', cacheError);
+      }
+      
       // 7. 获取最新仓位信息
       setStatus('获取最新仓位信息...');
       const positions = await getPositions(address);
@@ -128,6 +163,19 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
       throw new Error(`交易失败: ${result}\n查看详情: https://sepolia.etherscan.io/tx/${txHash}`);
     }
   };
+
+  // 动态计算：wbtcAmount = (wrmbAmount / 790000) * leverage
+  useEffect(() => {
+    if (tradingMode !== 'leverage') return;
+    const wrmb = parseFloat(wrmbAmount || '0');
+    const lev = parseFloat(leverage || '0');
+    if (!isFinite(wrmb) || !isFinite(lev)) {
+      setWbtcAmount('0');
+      return;
+    }
+    const result = (wrmb / 790000) * lev;
+    setWbtcAmount(result > 0 ? result.toFixed(6) : '0');
+  }, [wrmbAmount, leverage, tradingMode]);
 
   const handleTraditionalPosition = async (meta: any, address: `0x${string}`) => {
     setStatus('开始传统开仓...');
@@ -175,6 +223,28 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
 
     if (result === 'success') {
       setStatus('开仓成功！');
+      
+      // 开仓成功后，尝试更新缓存
+      try {
+        // 这里需要根据实际的事件日志来解析仓位ID
+        // 暂时使用一个模拟的仓位ID，实际应该从交易收据中解析
+        const mockPositionId = BigInt(Date.now()); // 临时使用时间戳作为仓位ID
+        
+        // 更新缓存
+        updatePositionCacheAfterOpen(
+          address,
+          mockPositionId,
+          meta.tokens.STETH, // 抵押物代币
+          parseEther(collateralAmount), // 抵押物数量
+          0n, // 债务数量（暂时设为0）
+          0n,  // 健康因子（暂时设为0）
+          parseFloat(leverage)
+        );
+        
+        console.log('已更新仓位缓存');
+      } catch (cacheError) {
+        console.warn('更新缓存失败:', cacheError);
+      }
       
       // 7. 获取最新仓位信息
       setStatus('获取最新仓位信息...');
@@ -251,16 +321,16 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                目标WBTC数量
+                目标WBTC数量（自动计算）
               </label>
               <Input
                 type="number"
                 step="0.001"
                 min="0"
                 value={wbtcAmount}
-                onChange={(e) => setWbtcAmount(e.target.value)}
-                placeholder="输入目标WBTC数量"
-                disabled={isLoading}
+                readOnly
+                placeholder="系统自动计算"
+                disabled
               />
             </div>
 
@@ -330,7 +400,7 @@ export default function OpenPositionButton({ onSuccess, onError }: OpenPositionB
 
         <Button
           onClick={handleOpenPosition}
-          disabled={isLoading || (tradingMode === 'leverage' ? (!wrmbAmount || !wbtcAmount || !leverage) : (!collateralAmount || !leverage))}
+          disabled={isLoading || (tradingMode === 'leverage' ? (!wrmbAmount || !leverage) : (!collateralAmount || !leverage))}
           className="w-full"
         >
           {isLoading ? '处理中...' : (tradingMode === 'leverage' ? '一步到位杠杆开仓' : '传统开仓')}

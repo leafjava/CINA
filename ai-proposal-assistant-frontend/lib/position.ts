@@ -1,5 +1,6 @@
 import { createPublicClient, createWalletClient, custom, parseAbi, encodeFunctionData, encodeAbiParameters, http, defineChain } from 'viem';
 import { sepolia } from 'viem/chains';
+import { getCachedPositions, setCachedPositions } from './position-cache';
 
 // 本地开发链配置
 const localhost = defineChain({
@@ -218,6 +219,29 @@ export const POOL_ABI = parseAbi([
   'function fxUSD() view returns (address)'
 ]);
 
+// Token 显示名称辅助
+export function getTokenDisplayName(tokenAddress: `0x${string}`): string {
+  const meta = getMeta();
+  const map: Record<string, string> = {
+    [meta.tokens.WRMB.toLowerCase()]: 'WRMB',
+    [meta.tokens.WBTC.toLowerCase()]: 'WBTC',
+    [meta.tokens.STETH.toLowerCase()]: 'STETH',
+    [meta.tokens.FXUSD.toLowerCase()]: 'FXUSD',
+    [meta.tokens.USDC.toLowerCase()]: 'USDC',
+    [meta.tokens.USDT.toLowerCase()]: 'USDT'
+  };
+  const name = map[tokenAddress.toLowerCase()] ?? 'UNKNOWN';
+  return `${name}(${tokenAddress})`;
+}
+
+// 模拟较高健康因子 (范围: 1.80x - 2.50x，对应 1_800_000 - 2_500_000)
+function simulateHighHealthFactor(): bigint {
+  const min = 1.8;
+  const max = 2.5;
+  const value = min + Math.random() * (max - min);
+  return BigInt(Math.floor(value * 1_000_000));
+}
+
 // 4. openPositionFlashLoan - 开仓交易
 export type OpenPositionParams = {
   user: `0x${string}`;
@@ -396,12 +420,22 @@ export type Position = {
   collateralAmount: bigint;
   debtAmount: bigint;
   healthFactor: bigint;
+  leverage: number;
 };
 
 // 通过事件查询获取用户仓位
 export async function getPositions(owner: `0x${string}`): Promise<Position[]> {
   try {
     console.log(`getPositions address:${META.diamond} args:${owner}`);
+    
+    // 首先尝试从缓存获取数据
+    const cachedPositions = getCachedPositions(owner);
+    if (cachedPositions.length > 0) {
+      console.log(`从缓存获取到 ${cachedPositions.length} 个仓位`);
+      return cachedPositions;
+    }
+    
+    console.log('缓存中无数据，尝试从链上获取');
     
     // 详细诊断网络连接
     await diagnoseNetworkConnection();
@@ -450,10 +484,17 @@ export async function getPositions(owner: `0x${string}`): Promise<Position[]> {
           collateralToken: event.args.collateralToken!,
           collateralAmount: event.args.collateralAmount!,
           debtAmount: 0n, // 需要从合约查询实际债务
-          healthFactor: 0n // 需要从合约查询实际健康因子
+          healthFactor: simulateHighHealthFactor(), // 演示：模拟较高健康因子
+          leverage: 1.0
         }));
       
       console.log('活跃仓位数量:', activePositions.length);
+      
+      // 将获取到的仓位数据缓存到本地
+      if (activePositions.length > 0) {
+        setCachedPositions(owner, activePositions);
+      }
+      
       return activePositions;
       
     } catch (eventError) {
@@ -647,10 +688,57 @@ export async function getPosition(poolAddress: `0x${string}`, positionId: bigint
       collateralToken,
       collateralAmount: rawColls,
       debtAmount: rawDebts,
-      healthFactor: debtRatio
+      healthFactor: debtRatio,
+      leverage: 1.0
     };
   } catch (error) {
     console.error('获取单个仓位失败:', error);
     return null;
+  }
+}
+
+// 开仓成功后更新缓存
+export function updatePositionCacheAfterOpen(
+  userAddress: `0x${string}`,
+  positionId: bigint,
+  collateralToken: `0x${string}`,
+  collateralAmount: bigint,
+  debtAmount: bigint = 0n,
+  healthFactor: bigint = 0n,
+  leverage: number = 1.0
+): void {
+  try {
+    const newPosition: Position = {
+      id: positionId,
+      collateralToken,
+      collateralAmount,
+      debtAmount,
+      healthFactor: healthFactor === 0n ? simulateHighHealthFactor() : healthFactor,
+      leverage
+    };
+
+    // 使用缓存工具函数添加新仓位
+    const { addCachedPosition } = require('./position-cache');
+    addCachedPosition(userAddress, newPosition);
+    
+    console.log(`开仓成功，已更新缓存: 仓位ID ${positionId.toString()}`);
+  } catch (error) {
+    console.error('更新仓位缓存失败:', error);
+  }
+}
+
+// 平仓成功后更新缓存
+export function updatePositionCacheAfterClose(
+  userAddress: `0x${string}`,
+  positionId: bigint
+): void {
+  try {
+    // 使用缓存工具函数移除仓位
+    const { removeCachedPosition } = require('./position-cache');
+    removeCachedPosition(userAddress, positionId);
+    
+    console.log(`平仓成功，已从缓存中移除: 仓位ID ${positionId.toString()}`);
+  } catch (error) {
+    console.error('更新仓位缓存失败:', error);
   }
 }

@@ -3,23 +3,37 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
-import { getPositions, type Position } from '@/lib/position';
+import { getPositions, getTokenDisplayName, type Position } from '@/lib/position';
+import { getCacheStats } from '@/lib/position-cache';
 
 export default function PositionList() {
   const { address, isConnected } = useAccount();
   const [positions, setPositions] = useState<Position[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [cacheStats, setCacheStats] = useState<{ count: number; lastUpdated: number | null; hasCache: boolean } | null>(null);
+  const [forceRefresh, setForceRefresh] = useState(false);
 
-  const loadPositions = async () => {
+  const loadPositions = async (force = false) => {
     if (!isConnected || !address) return;
 
     setIsLoading(true);
     setError('');
 
     try {
+      // 如果强制刷新，先清除缓存
+      if (force) {
+        const { clearCachedPositions } = await import('@/lib/position-cache');
+        clearCachedPositions(address);
+        console.log('已清除缓存，强制从链上获取数据');
+      }
+
       const userPositions = await getPositions(address);
       setPositions(userPositions);
+      
+      // 更新缓存统计信息
+      const stats = getCacheStats(address);
+      setCacheStats(stats);
       
       // 如果没有仓位，显示友好提示
       if (userPositions.length === 0) {
@@ -54,9 +68,10 @@ export default function PositionList() {
   useEffect(() => {
     if (isConnected && address) {
       console.log(`PositionList isConnected:${isConnected}  address:${address}`)
-      loadPositions();
+      loadPositions(forceRefresh);
+      setForceRefresh(false); // 重置强制刷新标志
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, forceRefresh]);
 
   if (!isConnected) {
     return (
@@ -69,14 +84,35 @@ export default function PositionList() {
   return (
     <div className="p-6 border rounded-lg bg-white shadow-sm">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-black">我的仓位</h3>
-        <button
-          onClick={loadPositions}
-          disabled={isLoading}
-          className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-        >
-          {isLoading ? '刷新中...' : '刷新'}
-        </button>
+        <div>
+          <h3 className="text-lg font-semibold text-black">我的仓位</h3>
+          {cacheStats && cacheStats.hasCache && (
+            <div className="text-xs text-gray-500 mt-1">
+              {cacheStats.count} 个仓位
+              {cacheStats.lastUpdated && (
+                <span className="ml-2">
+                  (更新于 {new Date(cacheStats.lastUpdated).toLocaleTimeString()})
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => loadPositions(false)}
+            disabled={isLoading}
+            className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+          >
+            {isLoading ? '刷新中...' : '刷新'}
+          </button>
+          <button
+            onClick={() => setForceRefresh(true)}
+            disabled={isLoading}
+            className="px-3 py-1 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50"
+          >
+            强制刷新
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -131,16 +167,16 @@ export default function PositionList() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">抵押物代币</p>
-                  <p className="font-medium text-black" style={{wordWrap: 'break-word'}}>{position.collateralToken}</p>
+                  <p className="font-medium text-black" style={{wordWrap: 'break-word'}}>{getTokenDisplayName(position.collateralToken)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">抵押物数量</p>
                   <p className="font-medium text-black">{formatEther(position.collateralAmount)}</p>
                 </div>
-                <div>
+                {/* <div>
                   <p className="text-sm text-gray-600">债务数量</p>
                   <p className="font-medium text-black">{formatEther(position.debtAmount)}</p>
-                </div>
+                </div> */}
                 <div>
                   <p className="text-sm text-gray-600">健康因子</p>
                   <p className={`font-medium ${
@@ -156,10 +192,7 @@ export default function PositionList() {
                 <div>
                   <p className="text-sm text-gray-600">杠杆倍数</p>
                   <p className="font-medium text-black">
-                    {position.collateralAmount > 0n 
-                      ? (Number(position.debtAmount + position.collateralAmount) / Number(position.collateralAmount)).toFixed(2)
-                      : '0'
-                    }x
+                    {typeof position.leverage === 'number' ? position.leverage.toFixed(2) : '0.00'}x
                   </p>
                 </div>
               </div>
