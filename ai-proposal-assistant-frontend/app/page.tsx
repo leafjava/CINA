@@ -30,7 +30,11 @@ export default function HomePage() {
         scene="/scene.splinecode" 
       />
 
-
+      {/* 10月20日上午添加的酷炫特效 */}
+      {/* <Spline
+        style={{position:'absolute',transform:''}}
+        scene="/scene2.splinecode" 
+      /> */}
       
       {/* 动态背景粒子 */}
       {/* <div className="absolute inset-0">
