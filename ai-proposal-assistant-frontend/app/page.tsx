@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import Spline from '@splinetool/react-spline/next';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Footer from '../components/footer';
 
 // 禁用静态优化，因为此页面包含 3D 场景和动态交互
 export const dynamic = 'force-dynamic';
