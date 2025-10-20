@@ -8,6 +8,9 @@ import Spline from '@splinetool/react-spline/next';
 import LogoMarquee from '../../components/logoMarquee';
 import React from 'react'
 
+// 禁用静态优化，因为此页面包含动态内容和 3D 场景
+export const dynamic = 'force-dynamic';
+
 export default function main() {
   // 检查是否从交易页面回退
   useEffect(() => {
@@ -49,9 +52,11 @@ export default function main() {
         {/* 顶部导航 */}
         <div className="flex items-center justify-between mb-12">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">CI</span>
-            </div>
+            <img 
+              src="/support/cina-logo-white.svg" 
+              alt="CINA Logo" 
+              className="w-10 h-10 object-contain"
+            />
             <div className="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               CINA
             </div>

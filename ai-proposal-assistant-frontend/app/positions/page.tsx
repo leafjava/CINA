@@ -6,6 +6,9 @@ import OpenPositionButton from '@/components/OpenPositionButton';
 import PositionList from '@/components/PositionList';
 import { type Position } from '@/lib/position';
 
+// 禁用静态优化，因为此页面依赖客户端钱包连接
+export const dynamic = 'force-dynamic';
+
 export default function PositionsPage() {
   const { isConnected } = useAccount();
   const [positions, setPositions] = useState<Position[]>([]);

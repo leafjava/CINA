@@ -1,6 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+// 禁用静态优化，因为此页面需要从后端获取动态数据
+export const dynamic = 'force-dynamic';
+
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://sepolia.infura.io/v3/62c0ac4c3b2e4a809869158eeec667e8';
 const DAO = process.env.NEXT_PUBLIC_DAO_ADDRESS || '';
 

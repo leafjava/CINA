@@ -8,6 +8,9 @@ import { PriceProvider } from '@/contexts/PriceContext';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+// 禁用静态优化，因为此页面需要实时数据
+export const dynamic = 'force-dynamic';
+
 const AVAILABLE_SYMBOLS = [
   { symbol: 'BTCUSDT', name: 'BTC/USDT', icon: '₿', basePrice: 106961 },
   { symbol: 'ETHUSDT', name: 'ETH/USDT', icon: 'Ξ', basePrice: 3889 },
