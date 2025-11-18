@@ -31,6 +31,12 @@ export default function Navbar() {
         >
           交易
         </Link>
+        <Link 
+          href="/staking" 
+          className="text-muted-foreground hover:text-foreground hover:cursor-pointer p-2 z-50 text-slate-400 hover:text-slate-50 transition-colors"
+        >
+          质押
+        </Link>
         <a 
           href="https://cina-beta.dev.isecsp.cn/#/" 
           target="_blank"
@@ -52,6 +58,14 @@ export default function Navbar() {
       {/* 右侧连接钱包区域 */}
       <div className="flex flex-row items-center">
         <ConnectWallet />
+        <a 
+          href="/person" 
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-purple-500/30 text-purple-400 font-medium rounded-xl hover:from-purple-500/30 hover:to-pink-500/30 hover:text-purple-300 transition-all duration-300 hover:scale-105"
+        >
+          个人中心
+        </a>
       </div>
     </nav>
   );

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import Spline from '@splinetool/react-spline/next';
+import Spline from '@splinetool/react-spline';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 

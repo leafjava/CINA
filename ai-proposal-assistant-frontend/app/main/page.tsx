@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import ConnectWallet from '../../components/ConnectWallet';
 import Poster from '../../components/ui/poster/poster';
-import Spline from '@splinetool/react-spline/next';
+import Spline from '@splinetool/react-spline';
 // import PartnersSection from '../components/PartnersSection';
 import LogoMarquee from '../../components/logoMarquee';
 import React from 'react'
